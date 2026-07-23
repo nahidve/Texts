@@ -13,14 +13,17 @@ import { Navigate } from 'react-router-dom'
 
 
 import { Toaster } from 'react-hot-toast'
+import { useCallStore } from './store/useCallStore'
+import { CallUI } from './components/CallUI'
 
 
 
 
 const App = () => {
 
-  const { authUser, checkAuth, isCheckingAuth, } = useAuthStore()
+  const { authUser, checkAuth, isCheckingAuth, socket } = useAuthStore()
   const { theme, setTheme } = useThemeStore();
+  const { setupSignaling } = useCallStore();
 
   useEffect(() => {
     checkAuth()
@@ -36,6 +39,12 @@ const App = () => {
       setTheme(storedTheme);
     }
   }, []);
+
+  useEffect(() => {
+    if (authUser && socket) {
+      setupSignaling();
+    }
+  }, [authUser, socket, setupSignaling]);
 
   console.log({authUser});
 
@@ -58,6 +67,7 @@ const App = () => {
       </Routes>
 
       <Toaster />
+      <CallUI />
     </div>
   )
 }

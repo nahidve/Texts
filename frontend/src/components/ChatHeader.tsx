@@ -1,10 +1,12 @@
-import { X } from "lucide-react";
+import { X, Phone, Video } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
+import { useCallStore } from "../store/useCallStore";
 
 const ChatHeader = () => {
   const { selectedUser, setSelectedUser } = useChatStore();
   const { onlineUsers } = useAuthStore();
+  const { initiateCall } = useCallStore();
   const isOnline = onlineUsers.includes(selectedUser._id);
 
   return (
@@ -38,13 +40,33 @@ const ChatHeader = () => {
           </div>
         </div>
 
-        {/* Close button */}
-        <button 
-          onClick={() => setSelectedUser(null)}
-          className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
-        >
-          <X className="size-5 text-base-content/70 group-hover:text-base-content transition-colors" />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Call buttons */}
+          <button 
+            onClick={() => initiateCall(selectedUser, "audio")}
+            disabled={!isOnline}
+            className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Voice Call"
+          >
+            <Phone className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
+          </button>
+          <button 
+            onClick={() => initiateCall(selectedUser, "video")}
+            disabled={!isOnline}
+            className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Video Call"
+          >
+            <Video className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
+          </button>
+
+          {/* Close button */}
+          <button 
+            onClick={() => setSelectedUser(null)}
+            className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
+          >
+            <X className="size-5 text-base-content/70 group-hover:text-base-content transition-colors" />
+          </button>
+        </div>
       </div>
     </div>
   );
