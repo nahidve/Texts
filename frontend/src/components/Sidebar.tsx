@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users, UsersIcon, PlusCircle, Search } from "lucide-react";
+import { Users, UsersIcon, PlusCircle, Search, PhoneCall } from "lucide-react";
 import CreateGroupModal from "./CreateGroupModal";
+import CallHistory from "./CallHistory";
 
 const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading, getGroups, groups, selectedGroup, setSelectedGroup, isGroupsLoading } = useChatStore();
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState<"users" | "groups">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "groups" | "calls">("users");
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -52,19 +53,27 @@ const Sidebar = () => {
             <UsersIcon className="size-5" />
             <span className="font-semibold hidden lg:block">Groups</span>
           </button>
+          <button 
+            onClick={() => setActiveTab("calls")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md transition-all ${activeTab === 'calls' ? 'bg-primary text-primary-content shadow-md' : 'text-zinc-400 hover:text-white hover:bg-base-300'}`}
+          >
+            <PhoneCall className="size-5" />
+            <span className="font-semibold hidden lg:block">Calls</span>
+          </button>
         </div>
         
-        {/* Search Input */}
-        <div className="relative mt-1 hidden lg:block">
-          <Search className="absolute left-2.5 top-2 size-4 text-zinc-400" />
-          <input
-            type="text"
-            placeholder={activeTab === "users" ? "Search contacts..." : "Search groups..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input input-sm w-full pl-9 bg-base-300/50 border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-lg text-white placeholder-zinc-400"
-          />
-        </div>
+        {activeTab !== "calls" && (
+          <div className="relative mt-1 hidden lg:block">
+            <Search className="absolute left-2.5 top-2 size-4 text-zinc-400" />
+            <input
+              type="text"
+              placeholder={activeTab === "users" ? "Search contacts..." : "Search groups..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input input-sm w-full pl-9 bg-base-300/50 border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-lg text-white placeholder-zinc-400"
+            />
+          </div>
+        )}
 
         {activeTab === 'users' ? (
           <div className="mt-3 flex items-center gap-3">
@@ -79,18 +88,20 @@ const Sidebar = () => {
             </label>
             <span className="text-xs text-accent font-semibold animate-pulse">({onlineUsers.length - 1} online)</span>
           </div>
-        ) : (
+        ) : activeTab === 'groups' ? (
           <div className="mt-3 flex items-center justify-between">
              <button onClick={() => setIsCreateGroupOpen(true)} className="flex items-center gap-2 px-2 py-1 rounded-lg bg-base-200/40 hover:bg-base-200/70 transition-all text-white/80 text-xs font-medium">
                 <PlusCircle className="size-4" />
                 <span className="hidden lg:block">Create Group</span>
              </button>
           </div>
-        )}
+        ) : null}
       </div>
       {/* List */}
       <div className="flex-1 overflow-y-auto w-full py-4 px-2 space-y-2 custom-scrollbar">
-        {activeTab === "users" ? (
+        {activeTab === "calls" ? (
+           <CallHistory />
+        ) : activeTab === "users" ? (
           <>
             {filteredUsers.map((user) => (
               <button

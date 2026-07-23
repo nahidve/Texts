@@ -200,10 +200,26 @@ const ChatContainer = () => {
                       />
                     )}
                     {message.text && (
-                      <p className="text-sm">
-                        {message.text.split(/(@[a-zA-Z0-9_ ]+)/g).map((part: string, i: number) => {
+                      <div className="text-sm">
+                        {message.text.split(/(@[a-zA-Z0-9_ ]+|https?:\/\/[^\s]+)/g).map((part: string, i: number) => {
                           if (part === "@all") {
                             return <span key={i} className="text-accent font-bold bg-accent/10 px-1 rounded">{part}</span>;
+                          }
+                          if (part.startsWith("http://") || part.startsWith("https://")) {
+                              if (part.includes("/join/")) {
+                                  return (
+                                    <div key={i} className="mt-2 mb-1">
+                                      <a href={part} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary shadow-md hover:scale-105 transition-transform text-white">
+                                          Join Group
+                                      </a>
+                                    </div>
+                                  );
+                              }
+                              return (
+                                <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
+                                    {part}
+                                </a>
+                              );
                           }
                           const mentionedMember = selectedGroup?.members.find((m: any) => `@${m.user.fullName}` === part);
                           if (mentionedMember && message.mentions?.includes(mentionedMember.user._id)) {
@@ -211,7 +227,7 @@ const ChatContainer = () => {
                           }
                           return <span key={i}>{part}</span>;
                         })}
-                      </p>
+                      </div>
                     )}
                     
                     {message.poll && message.poll.question && (

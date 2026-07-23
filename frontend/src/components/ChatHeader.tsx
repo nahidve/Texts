@@ -74,16 +74,14 @@ const ChatHeader = () => {
             <>
               <button
                 onClick={() => initiateCall(selectedUser, "audio")}
-                disabled={!isOnline}
-                className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
                 title="Voice Call"
               >
                 <Phone className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
               </button>
               <button
                 onClick={() => initiateCall(selectedUser, "video")}
-                disabled={!isOnline}
-                className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
                 title="Video Call"
               >
                 <Video className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
