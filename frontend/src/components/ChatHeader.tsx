@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { X, Settings } from "lucide-react";
-import { X, Phone, Video } from "lucide-react";
+import { X, Settings, Phone, Video } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import GroupSettingsModal from "./GroupSettingsModal";
@@ -11,9 +10,8 @@ const ChatHeader = () => {
   const { onlineUsers } = useAuthStore();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const isOnline = selectedUser && onlineUsers.includes(selectedUser._id);
   const { initiateCall } = useCallStore();
-  const isOnline = onlineUsers.includes(selectedUser._id);
+  const isOnline = selectedUser && onlineUsers.includes(selectedUser._id);
 
   return (
     <div className="p-4 border-b border-base-300 bg-base-100/80 backdrop-blur-sm shadow-sm">
@@ -65,53 +63,49 @@ const ChatHeader = () => {
             <button
               onClick={() => setIsSettingsOpen(true)}
               className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
+              title="Settings"
             >
               <Settings className="size-5 text-base-content/70 group-hover:text-base-content transition-colors" />
             </button>
           )}
 
-          <div className="flex items-center gap-2">
-            {/* Call buttons */}
-            <button
-              onClick={() => initiateCall(selectedUser, "audio")}
-              disabled={!isOnline}
-              className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Voice Call"
-            >
-              <Phone className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
-            </button>
-            <button
-              onClick={() => initiateCall(selectedUser, "video")}
-              disabled={!isOnline}
-              className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Video Call"
-            >
-              <Video className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
-            </button>
+          {/* Call buttons for users */}
+          {selectedUser && (
+            <>
+              <button
+                onClick={() => initiateCall(selectedUser, "audio")}
+                disabled={!isOnline}
+                className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Voice Call"
+              >
+                <Phone className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
+              </button>
+              <button
+                onClick={() => initiateCall(selectedUser, "video")}
+                disabled={!isOnline}
+                className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Video Call"
+              >
+                <Video className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
+              </button>
+            </>
+          )}
 
-            {/* Close button */}
-            <button
-              onClick={() => {
-                setSelectedUser(null);
-                setSelectedGroup(null);
-              }}
-              className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
-            >
-              <X className="size-5 text-base-content/70 group-hover:text-base-content transition-colors" />
-            </button>
-          </div>
+          {/* Close button */}
+          <button
+            onClick={() => {
+              setSelectedUser(null);
+              setSelectedGroup(null);
+            }}
+            className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
+            title="Close Chat"
+          >
+            <X className="size-5 text-base-content/70 group-hover:text-base-content transition-colors" />
+          </button>
         </div>
-        {isSettingsOpen && <GroupSettingsModal onClose={() => setIsSettingsOpen(false)} />}
-        {/* Close button */}
-        <button
-          onClick={() => setSelectedUser(null)}
-          className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
-        >
-          <X className="size-5 text-base-content/70 group-hover:text-base-content transition-colors" />
-        </button>
       </div>
+      {isSettingsOpen && <GroupSettingsModal onClose={() => setIsSettingsOpen(false)} />}
     </div>
-    </div >
   );
 };
 
