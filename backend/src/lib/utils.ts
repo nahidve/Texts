@@ -13,7 +13,7 @@ export const generateToken = (userId: string, res:Response) => {
 res.cookie("jwt", token, { //sending the token to the client in the form of a cookie
     maxAge:7*24*60*60*1000,
     httpOnly:true, //prevents XSS attacks which is a type of attack where the attacker injects malicious scripts into the website
-    sameSite:"strict",
+    sameSite: process.env.NODE_ENV !== "development" ? "none" : "strict",
     secure: process.env.NODE_ENV !== "development",
 })
 
