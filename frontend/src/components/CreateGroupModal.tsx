@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useChatStore } from "../store/useChatStore";
-import { useAuthStore } from "../store/useAuthStore";
+//import { useAuthStore } from "../store/useAuthStore";
 import { X, Camera, Check } from "lucide-react";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
@@ -124,9 +124,8 @@ const CreateGroupModal = ({ onClose }: CreateGroupModalProps) => {
             {users.map((user) => (
               <label
                 key={user._id}
-                className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedMembers.includes(user._id) ? "bg-primary/10 border border-primary/30" : "hover:bg-base-200 border border-transparent"
-                }`}
+                className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${selectedMembers.includes(user._id) ? "bg-primary/10 border border-primary/30" : "hover:bg-base-200 border border-transparent"
+                  }`}
               >
                 <input
                   type="checkbox"
