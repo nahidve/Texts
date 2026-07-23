@@ -1,9 +1,9 @@
-import User from "../models/user.model";
+import User from "../models/user.model.js";
 import { Request, Response } from "express";
-import Message from "../models/message.model";
-import cloudinary from "../lib/cloudinary";
-import { getReceiverSocketId } from "../lib/socket";
-import { io } from "../lib/socket";
+import Message from "../models/message.model.js";
+import cloudinary from "../lib/cloudinary.js";
+import { getReceiverSocketId } from "../lib/socket.js";
+import { io } from "../lib/socket.js";
 
 //get all users except yourself for the sidebar
 export const getUsersForSidebar=async(req:Request, res:Response)=>{

@@ -1,6 +1,6 @@
 import express from "express";
-import { signup, login, logout, updateProfile, checkAuth } from "../controllers/auth.controller";
-import { protectRoute } from "../middleware/auth.middleware"; //this is a middleware that checks if the user is logged in or not
+import { signup, login, logout, updateProfile, checkAuth } from "../controllers/auth.controller.js";
+import { protectRoute } from "../middleware/auth.middleware.js"; //this is a middleware that checks if the user is logged in or not
 
 
 const router = express.Router();

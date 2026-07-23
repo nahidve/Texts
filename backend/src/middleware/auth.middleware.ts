@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import {JwtPayload} from "jsonwebtoken";
-import User from "../models/user.model";
+import User from "../models/user.model.js";
 import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 dotenv.config();
-import { UserType } from "../models/user.model";
+import { UserType } from "../models/user.model.js";
 
 //PROTECT ROUTE MIDDLEWARE which checks if the user is logged in or not
 export const protectRoute = async(req: Request, res: Response, next: NextFunction) => {

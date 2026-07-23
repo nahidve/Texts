@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import User from "../models/user.model";
-import type { UserType } from "../models/user.model";
+import User from "../models/user.model.js";
+import type { UserType } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import { generateToken } from "../lib/utils";
-import cloudinary from "../lib/cloudinary";
+import { generateToken } from "../lib/utils.js";
+import cloudinary from "../lib/cloudinary.js";
 
 
 export const signup = async(req: Request, res: Response) => {
