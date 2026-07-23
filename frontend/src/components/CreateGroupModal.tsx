@@ -11,7 +11,6 @@ type CreateGroupModalProps = {
 
 const CreateGroupModal = ({ onClose }: CreateGroupModalProps) => {
   const { users, getGroups } = useChatStore();
-  const { authUser } = useAuthStore();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);

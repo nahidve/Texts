@@ -48,7 +48,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
     socket.off("USER_BUSY");
     socket.off("WEBRTC_SIGNAL");
 
-    socket.on("CALL_INCOMING", ({ callerId, callerInfo, callType }) => {
+    socket.on("CALL_INCOMING", ({ callerId, callerInfo, callType }: { callerId: string, callerInfo: any, callType: "audio" | "video" }) => {
       const { callState } = get();
       if (callState !== "idle") {
         // We are busy, the backend should ideally catch this but just in case
@@ -58,7 +58,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
       set({ callState: "incoming", remoteUser: { _id: callerId, ...callerInfo }, callType });
     });
 
-    socket.on("CALL_ACCEPTED", async ({ receiverId }) => {
+    socket.on("CALL_ACCEPTED", async ({ receiverId }: { receiverId: string }) => {
       set({ callState: "connected" });
       const offer = await webrtcManager.createOffer();
       socket.emit("WEBRTC_SIGNAL", { targetId: receiverId, signalData: { type: "offer", offer } });
@@ -82,7 +82,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
       get().cleanup();
     });
 
-    socket.on("WEBRTC_SIGNAL", async ({ senderId, signalData }) => {
+    socket.on("WEBRTC_SIGNAL", async ({ senderId, signalData }: { senderId: string, signalData: any }) => {
       if (signalData.type === "offer") {
         await webrtcManager.handleOffer(signalData.offer);
         const answer = await webrtcManager.createAnswer(signalData.offer);

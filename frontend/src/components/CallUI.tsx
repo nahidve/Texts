@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useCallStore } from "../store/useCallStore";
+import { useEffect, useRef, useState } from "react";
 import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff } from "lucide-react";
+import { useCallStore } from "../store/useCallStore";
 
 export const CallUI = () => {
   const {

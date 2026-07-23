@@ -24,6 +24,7 @@ type ChatStore = {
   editingMessage: any | null;
   setEditingMessage: (msg: any) => void;
   setReplyingToMessage: (msg: any) => void;
+  replyingToMessage: any | null;
   pinMessage: (messageId: string) => Promise<void>;
   editMessage: (messageId: string, text: string) => Promise<void>;
   reactToMessage: (messageId: string, emoji: string) => Promise<void>;
@@ -116,7 +117,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     socket.off("pollUpdated");
 
     if (selectedUser) {
-      socket.on("newMessage", (newMessage) => {
+      socket.on("newMessage", (newMessage: any) => {
         const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
         if (!isMessageSentFromSelectedUser) return;
 
@@ -127,7 +128,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
 
     if (selectedGroup) {
-      socket.on("newGroupMessage", (newMessage) => {
+      socket.on("newGroupMessage", (newMessage: any) => {
         if (newMessage.groupId !== selectedGroup._id) return;
         set({
           messages: [...get().messages, newMessage],
@@ -135,30 +136,30 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       });
     }
 
-    socket.on("pollUpdated", (updatedMessage) => {
+    socket.on("pollUpdated", (updatedMessage: any) => {
       set({
         messages: get().messages.map(m => m._id === updatedMessage._id ? updatedMessage : m)
       });
     });
 
-    socket.on("messageUpdated", (updatedMessage) => {
+    socket.on("messageUpdated", (updatedMessage: any) => {
       set({
         messages: get().messages.map(m => m._id === updatedMessage._id ? updatedMessage : m)
       });
     });
 
-    socket.on("userTyping", ({ userId, groupId }) => {
+    socket.on("userTyping", ({ userId, groupId }: { userId: string, groupId?: string }) => {
       const { selectedUser, selectedGroup } = get();
       if ((selectedGroup && groupId === selectedGroup._id) || (selectedUser && userId === selectedUser._id && !groupId)) {
         set({ typingUsers: [...new Set([...get().typingUsers, userId])] });
       }
     });
 
-    socket.on("userStoppedTyping", ({ userId }) => {
+    socket.on("userStoppedTyping", ({ userId }: { userId: string }) => {
       set({ typingUsers: get().typingUsers.filter(id => id !== userId) });
     });
 
-    socket.on("messageDeleted", (messageId) => {
+    socket.on("messageDeleted", (messageId: string) => {
       set({ messages: get().messages.filter(m => m._id !== messageId) });
     });
   },
