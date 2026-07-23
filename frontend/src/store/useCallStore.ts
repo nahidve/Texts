@@ -92,6 +92,8 @@ export const useCallStore = create<CallStore>((set, get) => ({
     });
 
     socket.on("CALL_ACCEPTED", async ({ receiverId }: any) => {
+      const { callState, remoteUser } = get();
+      if (callState !== "calling" || remoteUser?._id !== receiverId) return;
       get().stopRingtone();
       set({ callState: "connected" });
       const offer = await webrtcManager.createOffer(receiverId);
@@ -99,29 +101,35 @@ export const useCallStore = create<CallStore>((set, get) => ({
     });
 
     socket.on("CALL_REJECTED", () => {
+      if (get().callState === "idle") return;
       toast.error("Call declined");
       get().cleanup();
     });
 
     socket.on("CALL_CANCELLED", () => {
+      if (get().callState === "idle") return;
       get().cleanup();
     });
 
     socket.on("CALL_ENDED", () => {
+      if (get().callState === "idle") return;
       get().cleanup();
     });
 
     socket.on("USER_BUSY", () => {
+      if (get().callState === "idle") return;
       toast.error("User is busy on another call");
       get().cleanup();
     });
     
     socket.on("USER_OFFLINE", () => {
+      if (get().callState === "idle") return;
       toast.error("User is offline");
       get().cleanup();
     });
 
     socket.on("WEBRTC_SIGNAL", async ({ senderId, signalData }: any) => {
+      if (get().callState === "idle") return;
       if (signalData.type === "offer") {
         await webrtcManager.handleOffer(senderId, signalData.offer);
         const answer = await webrtcManager.createAnswer(senderId, signalData.offer);

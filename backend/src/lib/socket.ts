@@ -17,12 +17,8 @@ const io = new Server(server, {
     },
 });
 
-export function getReceiverSocketId(userId: string){
-    return userSocketMap[userId];
-}
-
-//used to store online users
-const userSocketMap: { [key: string]: string } = {};
+// used to store online users and their multiple tabs
+const userSockets = new Map<string, Set<string>>();
 
 // used to store users currently in a call (busy)
 const busyUsers = new Set<string>();
@@ -35,7 +31,12 @@ io.on("connection", (socket) => {
 
     const userId = socket.handshake.query.userId;
     if (typeof userId === "string") {
-      userSocketMap[userId] = socket.id;
+      socket.join(userId);
+      
+      if (!userSockets.has(userId)) {
+          userSockets.set(userId, new Set());
+      }
+      userSockets.get(userId)!.add(socket.id);
       
       // Join all group rooms the user is a member of
       Group.find({ "members.user": userId }).then(groups => {
@@ -46,19 +47,23 @@ io.on("connection", (socket) => {
     }
 
     //io.emit() is used to send a message to all connected clients
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    io.emit("getOnlineUsers", Array.from(userSockets.keys()));
 
     socket.on("disconnect", async () => {
         console.log("A user disconnected", socket.id);
         if (typeof userId === "string") {
-          if (userSocketMap[userId] === socket.id) {
-              delete userSocketMap[userId];
-              try {
-                  await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
-              } catch (e) { console.error("Error updating lastSeen", e); }
+          const sockets = userSockets.get(userId);
+          if (sockets) {
+              sockets.delete(socket.id);
+              if (sockets.size === 0) {
+                  userSockets.delete(userId);
+                  try {
+                      await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
+                  } catch (e) { console.error("Error updating lastSeen", e); }
+              }
           }
         }
-        io.emit("getOnlineUsers", Object.keys(userSocketMap));
+        io.emit("getOnlineUsers", Array.from(userSockets.keys()));
     });
 
     socket.on("join-room", (roomId) => {
@@ -71,10 +76,7 @@ io.on("connection", (socket) => {
             if (groupId) {
                 socket.to(`group_${groupId}`).emit("userTyping", { userId, groupId });
             } else if (receiverId) {
-                const receiverSocketId = getReceiverSocketId(receiverId);
-                if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("userTyping", { userId });
-                }
+                io.to(receiverId).emit("userTyping", { userId });
             }
         }
     });
@@ -83,9 +85,8 @@ io.on("connection", (socket) => {
 
     socket.on("CALL_INITIATE", async ({ receiverId, callerInfo, callType }) => {
         const callerId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
-        const receiverSocketId = getReceiverSocketId(receiverId);
         
-        if (receiverSocketId) {
+        if (userSockets.has(receiverId)) {
             if (busyUsers.has(receiverId)) {
                 // User is busy
                 io.to(socket.id).emit("USER_BUSY", { receiverId });
@@ -105,11 +106,11 @@ io.on("connection", (socket) => {
                     callEvent: { status: "busy", callType, duration: 0 }
                 }).save();
                 io.to(socket.id).emit("newMessage", msg);
-                io.to(receiverSocketId).emit("newMessage", msg);
+                io.to(receiverId).emit("newMessage", msg);
                 
             } else {
                 // Forward the call request
-                io.to(receiverSocketId).emit("CALL_INCOMING", { 
+                io.to(receiverId).emit("CALL_INCOMING", { 
                     callerId, 
                     callerInfo,
                     callType 
@@ -143,21 +144,17 @@ io.on("connection", (socket) => {
             if (groupId) {
                 socket.to(`group_${groupId}`).emit("userStoppedTyping", { userId, groupId });
             } else if (receiverId) {
-                const receiverSocketId = getReceiverSocketId(receiverId);
-                if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("userStoppedTyping", { userId });
-                }
+                io.to(receiverId).emit("userStoppedTyping", { userId });
             }
         }
     });
 
     // 2. Accept Call
     socket.on("CALL_ACCEPT", ({ callerId }) => {
-        const callerSocketId = getReceiverSocketId(callerId);
         if (typeof userId === "string") busyUsers.add(userId);
-        if (callerSocketId) {
+        if (userSockets.has(callerId)) {
             busyUsers.add(callerId);
-            io.to(callerSocketId).emit("CALL_ACCEPTED", { 
+            io.to(callerId).emit("CALL_ACCEPTED", { 
                 receiverId: typeof userId === "string" ? userId : socket.handshake.query.userId 
             });
         }
@@ -165,7 +162,6 @@ io.on("connection", (socket) => {
 
     // 3. Reject Call
     socket.on("CALL_REJECT", async ({ callerId, callType }) => {
-        const callerSocketId = getReceiverSocketId(callerId);
         const receiverId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         
         await new Call({
@@ -183,17 +179,17 @@ io.on("connection", (socket) => {
             callEvent: { status: "rejected", callType: callType || "audio", duration: 0 }
         }).save();
 
-        if (callerSocketId) {
-            io.to(callerSocketId).emit("CALL_REJECTED", { receiverId });
-            io.to(callerSocketId).emit("newMessage", msg);
+        if (userSockets.has(callerId)) {
+            io.to(callerId).emit("CALL_REJECTED", { receiverId });
+            io.to(callerId).emit("newMessage", msg);
         }
-        const receiverSocketId = getReceiverSocketId(receiverId);
-        if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", msg);
+        if (userSockets.has(receiverId)) {
+            io.to(receiverId).emit("newMessage", msg);
+        }
     });
 
     // 4. Cancel Call (Caller cancels before answer)
     socket.on("CALL_CANCEL", async ({ receiverId, callType }) => {
-        const receiverSocketId = getReceiverSocketId(receiverId);
         const callerId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         
         await new Call({
@@ -211,17 +207,17 @@ io.on("connection", (socket) => {
             callEvent: { status: "missed", callType: callType || "audio", duration: 0 }
         }).save();
 
-        if (receiverSocketId) {
-            io.to(receiverSocketId).emit("CALL_CANCELLED", { callerId });
-            io.to(receiverSocketId).emit("newMessage", msg);
+        if (userSockets.has(receiverId)) {
+            io.to(receiverId).emit("CALL_CANCELLED", { callerId });
+            io.to(receiverId).emit("newMessage", msg);
         }
-        const callerSocketId = getReceiverSocketId(callerId);
-        if (callerSocketId) io.to(callerSocketId).emit("newMessage", msg);
+        if (userSockets.has(callerId)) {
+            io.to(callerId).emit("newMessage", msg);
+        }
     });
 
     // 5. End Call
     socket.on("CALL_END", async ({ targetId, duration, callType }) => {
-        const targetSocketId = getReceiverSocketId(targetId);
         const currentUserId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         
         if (typeof userId === "string") busyUsers.delete(userId);
@@ -243,19 +239,19 @@ io.on("connection", (socket) => {
             callEvent: { status: "ended", callType: callType || "audio", duration: duration || 0 }
         }).save();
 
-        if (targetSocketId) {
-            io.to(targetSocketId).emit("CALL_ENDED", { enderId: currentUserId });
-            io.to(targetSocketId).emit("newMessage", msg);
+        if (userSockets.has(targetId)) {
+            io.to(targetId).emit("CALL_ENDED", { enderId: currentUserId });
+            io.to(targetId).emit("newMessage", msg);
         }
-        const senderSocketId = getReceiverSocketId(currentUserId);
-        if (senderSocketId) io.to(senderSocketId).emit("newMessage", msg);
+        if (userSockets.has(currentUserId)) {
+            io.to(currentUserId).emit("newMessage", msg);
+        }
     });
 
     // 6. WebRTC Signaling (SDP Offer/Answer & ICE Candidates)
     socket.on("WEBRTC_SIGNAL", ({ targetId, signalData }) => {
-        const targetSocketId = getReceiverSocketId(targetId);
-        if (targetSocketId) {
-            io.to(targetSocketId).emit("WEBRTC_SIGNAL", { 
+        if (userSockets.has(targetId)) {
+            io.to(targetId).emit("WEBRTC_SIGNAL", { 
                 senderId: typeof userId === "string" ? userId : socket.handshake.query.userId, 
                 signalData 
             });
@@ -328,9 +324,8 @@ io.on("connection", (socket) => {
     });
 
     socket.on("GROUP_WEBRTC_SIGNAL", ({ targetId, groupId, signalData }) => {
-        const targetSocketId = getReceiverSocketId(targetId);
-        if (targetSocketId) {
-            io.to(targetSocketId).emit("GROUP_WEBRTC_SIGNAL", { 
+        if (userSockets.has(targetId)) {
+            io.to(targetId).emit("GROUP_WEBRTC_SIGNAL", { 
                 senderId: typeof userId === "string" ? userId : socket.handshake.query.userId, 
                 groupId,
                 signalData 

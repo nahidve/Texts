@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import Message from "../models/message.model.js";
 import Group from "../models/group.model.js";
 import cloudinary from "../lib/cloudinary.js";
-import { getReceiverSocketId } from "../lib/socket.js";
 import { io } from "../lib/socket.js";
 
 //get all users except yourself for the sidebar
@@ -73,15 +72,9 @@ export const sendMessage = async (req: Request, res: Response) => {
       await newMessage.save();
       await newMessage.populate("replyTo", "text image senderId isForwarded");
   
-      // Emit to receiver and sender
-      const receiverSocketId = getReceiverSocketId(receiverId as string);
-      const senderSocketId = getReceiverSocketId(senderId as string);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("newMessage", newMessage);
-      }
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("newMessage", newMessage);
-      }
+      // Emit to receiver and sender (rooms are their user IDs)
+      io.to(receiverId as string).emit("newMessage", newMessage);
+      io.to(senderId as string).emit("newMessage", newMessage);
   
       res.status(201).json(newMessage);
     } catch (error) {
@@ -172,10 +165,8 @@ export const votePoll = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("pollUpdated", message);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("pollUpdated", message);
-            if (senderSocketId) io.to(senderSocketId).emit("pollUpdated", message);
+            io.to(message.receiverId.toString()).emit("pollUpdated", message);
+            io.to(message.senderId.toString()).emit("pollUpdated", message);
         }
 
         res.status(200).json(message);
@@ -208,10 +199,8 @@ export const pinMessage = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("messageUpdated", message);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("messageUpdated", message);
-            if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", message);
+            io.to(message.receiverId.toString()).emit("messageUpdated", message);
+            io.to(message.senderId.toString()).emit("messageUpdated", message);
         }
 
         res.status(200).json(message);
@@ -242,10 +231,8 @@ export const editMessage = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("messageUpdated", message);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("messageUpdated", message);
-            if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", message);
+            io.to(message.receiverId.toString()).emit("messageUpdated", message);
+            io.to(message.senderId.toString()).emit("messageUpdated", message);
         }
 
         res.status(200).json(message);
@@ -295,10 +282,8 @@ export const reactToMessage = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("messageUpdated", message);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("messageUpdated", message);
-            if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", message);
+            io.to(message.receiverId.toString()).emit("messageUpdated", message);
+            io.to(message.senderId.toString()).emit("messageUpdated", message);
         }
 
         res.status(200).json(message);
@@ -350,10 +335,8 @@ export const deleteMessageForEveryone = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("messageDeleted", messageId);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("messageDeleted", messageId);
-            if (senderSocketId) io.to(senderSocketId).emit("messageDeleted", messageId);
+            io.to(message.receiverId.toString()).emit("messageDeleted", messageId);
+            io.to(message.senderId.toString()).emit("messageDeleted", messageId);
         }
 
         res.status(200).json({ message: "Message deleted for everyone", messageId });
