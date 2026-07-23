@@ -3,7 +3,7 @@ class ToneGenerator {
   private oscillators: OscillatorNode[] = [];
   private gainNode: GainNode | null = null;
   private isPlaying = false;
-  private intervalId: number | NodeJS.Timeout | null = null;
+  private intervalId: number | any = null;
 
   private init() {
     if (!this.audioCtx) {

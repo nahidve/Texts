@@ -68,7 +68,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
     socket.off("GROUP_USER_LEFT");
     socket.off("GROUP_WEBRTC_SIGNAL");
 
-    socket.on("CALL_INCOMING", ({ callerId, callerInfo, callType }) => {
+    socket.on("CALL_INCOMING", ({ callerId, callerInfo, callType }: any) => {
       const { callState } = get();
       if (callState !== "idle") {
         socket.emit("USER_BUSY", { receiverId: callerId });
@@ -81,7 +81,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
       get().playRingtone("incoming");
     });
 
-    socket.on("CALL_ACCEPTED", async ({ receiverId }) => {
+    socket.on("CALL_ACCEPTED", async ({ receiverId }: any) => {
       get().stopRingtone();
       set({ callState: "connected" });
       const offer = await webrtcManager.createOffer(receiverId);
@@ -106,7 +106,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
       get().cleanup();
     });
 
-    socket.on("WEBRTC_SIGNAL", async ({ senderId, signalData }) => {
+    socket.on("WEBRTC_SIGNAL", async ({ senderId, signalData }: any) => {
       if (signalData.type === "offer") {
         await webrtcManager.handleOffer(senderId, signalData.offer);
         const answer = await webrtcManager.createAnswer(senderId, signalData.offer);
@@ -119,7 +119,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
     });
 
     // GROUP SIGNALING
-    socket.on("GROUP_CALL_INCOMING", ({ groupId, callerId, callerInfo, callType, participants }) => {
+    socket.on("GROUP_CALL_INCOMING", ({ groupId, callerId, callerInfo, callType }: any) => {
        const { callState } = get();
        if (callState !== "idle") return; // silently ignore if busy
        
@@ -132,7 +132,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
        get().playRingtone("incoming");
     });
 
-    socket.on("GROUP_USER_JOINED", async ({ userId, participants }) => {
+    socket.on("GROUP_USER_JOINED", async ({ userId }: any) => {
         // If we are already connected, create an offer to the new user
         const { callState, activeGroup } = get();
         if (callState === "connected" && activeGroup) {
@@ -141,11 +141,11 @@ export const useCallStore = create<CallStore>((set, get) => ({
         }
     });
 
-    socket.on("GROUP_USER_LEFT", ({ userId }) => {
+    socket.on("GROUP_USER_LEFT", ({ userId }: any) => {
         webrtcManager.removePeer(userId);
     });
 
-    socket.on("GROUP_WEBRTC_SIGNAL", async ({ senderId, groupId, signalData }) => {
+    socket.on("GROUP_WEBRTC_SIGNAL", async ({ senderId, groupId, signalData }: any) => {
       if (signalData.type === "offer") {
         await webrtcManager.handleOffer(senderId, signalData.offer);
         const answer = await webrtcManager.createAnswer(senderId, signalData.offer);
@@ -185,7 +185,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
 
   initiateCall: async (entity, type, isGroup = false) => {
     const socket = useAuthStore.getState().socket;
-    const { authUser, onlineUsers } = useAuthStore.getState();
+    const { authUser } = useAuthStore.getState();
     if (!socket || !authUser) return;
 
     try {

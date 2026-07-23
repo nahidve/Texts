@@ -8,7 +8,10 @@ export class WebRTCManager {
   public onRemoteTrack?: (targetId: string, stream: MediaStream) => void;
   public onStreamRemoved?: (targetId: string) => void;
 
-  constructor(private config?: RTCConfiguration) {
+  private config?: RTCConfiguration;
+
+  constructor(config?: RTCConfiguration) {
+    this.config = config;
     if (!this.config) {
       this.config = {
         iceServers: [

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { axiosInstance } from "../lib/axios";
-import { Phone, PhoneMissed, Video, PhoneOutgoing, PhoneIncoming, Trash2 } from "lucide-react";
+import { Phone, PhoneMissed, PhoneOutgoing, PhoneIncoming, Trash2 } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useCallStore } from "../store/useCallStore";
 import toast from "react-hot-toast";
