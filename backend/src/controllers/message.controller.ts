@@ -10,7 +10,7 @@ import { io } from "../lib/socket.js";
 export const getUsersForSidebar=async(req:Request, res:Response)=>{
     //get all users except yourself
     try{
-        const loggedInUserId=req.user?._id;
+        const loggedInUserId = (req.user as any)._id;
         const filteredUsers=await User.find({_id:{$ne:loggedInUserId}}).select("-password"); //this will return all users except the logged in user
 
         res.status(200).json(filteredUsers); //send the users to the frontend
@@ -26,7 +26,7 @@ export const getUsersForSidebar=async(req:Request, res:Response)=>{
 export const getMessages=async(req:Request, res:Response)=>{
     try{
         const {id:userToChatId}=req.params; //this is the id of the user to chat with
-        const myId=req.user?._id; //this is the id of the logged in user
+        const myId = (req.user as any)._id;
 
         const messages=await Message.find({ //this will return all messages between the two users
             $or:[ 
@@ -49,7 +49,7 @@ export const sendMessage = async (req: Request, res: Response) => {
     try {
       const { text, image, replyTo, isForwarded } = req.body;
       const { id: receiverId } = req.params;
-      const senderId = req.user?._id;
+      const senderId = (req.user as any)._id;
   
       if (!text && !image) {
         return res.status(400).json({ message: "Text or image is required" });
@@ -107,7 +107,7 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
     try {
         const { text, image, mentions, poll, replyTo, isForwarded } = req.body;
         const { id: groupId } = req.params;
-        const senderId = req.user?._id;
+        const senderId = (req.user as any)._id;
 
         if (!text && !image && !poll) {
             return res.status(400).json({ message: "Text, image, or poll is required" });
@@ -150,7 +150,7 @@ export const votePoll = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const { optionIndex } = req.body;
-        const userId = req.user?._id;
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message || !message.poll) {
@@ -189,7 +189,7 @@ export const votePoll = async (req: Request, res: Response) => {
 export const pinMessage = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
-        const userId = req.user?._id;
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -226,7 +226,7 @@ export const editMessage = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const { text } = req.body;
-        const userId = req.user?._id;
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -260,7 +260,7 @@ export const reactToMessage = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const { emoji } = req.body;
-        const userId = req.user?._id;
+        const userId = (req.user as any)._id;
 
         if (!emoji) return res.status(400).json({ message: "Emoji is required" });
 
@@ -312,7 +312,7 @@ export const reactToMessage = async (req: Request, res: Response) => {
 export const deleteMessageForMe = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
-        const userId = req.user?._id;
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -335,7 +335,7 @@ export const deleteMessageForMe = async (req: Request, res: Response) => {
 export const deleteMessageForEveryone = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
-        const userId = req.user?._id;
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
