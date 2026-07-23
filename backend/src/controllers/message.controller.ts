@@ -3,14 +3,13 @@ import { Request, Response } from "express";
 import Message from "../models/message.model.js";
 import Group from "../models/group.model.js";
 import cloudinary from "../lib/cloudinary.js";
-import { io } from "../lib/socket.js";
+import { io, getReceiverSocketId } from "../lib/socket.js";
 
 //get all users except yourself for the sidebar
 export const getUsersForSidebar = async (req: Request, res: Response) => {
     //get all users except yourself
     try {
         const loggedInUserId = (req.user!._id as any);
-        const loggedInUserId = (req.user as any)._id;
         const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password"); //this will return all users except the logged in user
 
         res.status(200).json(filteredUsers); //send the users to the frontend
@@ -31,7 +30,6 @@ export const getMessages = async (req: Request, res: Response) => {
         if (userToChatId === "undefined" || !userToChatId) {
             return res.status(200).json([]);
         }
-        const myId = (req.user as any)._id;
 
         const messages = await Message.find({ //this will return all messages between the two users
             $or: [
@@ -55,7 +53,6 @@ export const sendMessage = async (req: Request, res: Response) => {
         const { text, image, audio, audioDuration, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
         const { id: receiverId } = req.params;
         const senderId = (req.user!._id as any);
-        const senderId = (req.user as any)._id;
 
         if (!text && !image && !audio) {
             return res.status(400).json({ message: "Text, image, or audio is required" });
@@ -143,7 +140,6 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
         const { text, image, audio, audioDuration, mentions, poll, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
         const { id: groupId } = req.params;
         const senderId = (req.user!._id as any);
-        const senderId = (req.user as any)._id;
 
         if (!text && !image && !poll && !audio) {
             return res.status(400).json({ message: "Text, image, poll, or audio is required" });
@@ -219,7 +215,6 @@ export const votePoll = async (req: Request, res: Response) => {
         const { id: messageId } = req.params;
         const { optionIndex } = req.body;
         const userId = (req.user!._id as any);
-        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message || !message.poll) {
@@ -257,7 +252,6 @@ export const pinMessage = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const userId = (req.user!._id as any);
-        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -293,7 +287,6 @@ export const editMessage = async (req: Request, res: Response) => {
         const { id: messageId } = req.params;
         const { text } = req.body;
         const userId = (req.user!._id as any);
-        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -326,7 +319,6 @@ export const reactToMessage = async (req: Request, res: Response) => {
         const { id: messageId } = req.params;
         const { emoji } = req.body;
         const userId = (req.user!._id as any);
-        const userId = (req.user as any)._id;
 
         if (!emoji) return res.status(400).json({ message: "Emoji is required" });
 
@@ -377,7 +369,6 @@ export const deleteMessageForMe = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const userId = (req.user!._id as any);
-        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -401,7 +392,6 @@ export const deleteMessageForEveryone = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const userId = (req.user!._id as any);
-        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });

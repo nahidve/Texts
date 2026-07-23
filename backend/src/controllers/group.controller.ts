@@ -8,7 +8,6 @@ export const createGroup = async (req: Request, res: Response) => {
     try {
         const { name, description, avatar, memberIds } = req.body;
         const myId = (req.user!._id as any);
-        const myId = (req.user as any)._id;
 
         if (!name) return res.status(400).json({ message: "Group name is required" });
 
@@ -55,7 +54,6 @@ export const createGroup = async (req: Request, res: Response) => {
 export const getGroups = async (req: Request, res: Response) => {
     try {
         const myId = (req.user!._id as any);
-        const myId = (req.user as any)._id;
         const groups = await Group.find({ "members.user": myId }).populate("members.user", "-password");
         res.status(200).json(groups);
     } catch (error) {
@@ -70,7 +68,6 @@ export const updateGroup = async (req: Request, res: Response) => {
         const { id } = req.params;
         const { name, description, avatar, settings, permissions } = req.body;
         const myId = (req.user!._id as any);
-        const myId = (req.user as any)._id;
 
         const group = await Group.findById(id);
         if (!group) return res.status(404).json({ message: "Group not found" });
@@ -105,7 +102,6 @@ export const addMembers = async (req: Request, res: Response) => {
         const { id: groupId } = req.params;
         const { memberIds } = req.body;
         const myId = (req.user!._id as any);
-        const myId = (req.user as any)._id;
 
         const group = await Group.findById(groupId);
         if (!group) return res.status(404).json({ message: "Group not found" });
@@ -136,7 +132,6 @@ export const removeMember = async (req: Request, res: Response) => {
     try {
         const { id: groupId, userId } = req.params;
         const myId = (req.user!._id as any);
-        const myId = (req.user as any)._id;
 
         const group = await Group.findById(groupId);
         if (!group) return res.status(404).json({ message: "Group not found" });
@@ -160,7 +155,6 @@ export const joinGroupViaLink = async (req: Request, res: Response) => {
     try {
         const { link } = req.params;
         const myId = (req.user!._id as any);
-        const myId = (req.user as any)._id;
 
         const group = await Group.findOne({ joinLink: link });
         if (!group) return res.status(404).json({ message: "Group not found or invalid link" });
@@ -186,7 +180,6 @@ export const leaveGroup = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const myId = (req.user!._id as any);
-        const myId = (req.user as any)._id;
 
         const group = await Group.findById(id);
         if (!group) return res.status(404).json({ message: "Group not found" });

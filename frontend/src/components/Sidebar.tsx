@@ -3,8 +3,7 @@ import { createPortal } from "react-dom";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users, UsersIcon, PlusCircle, Search, PhoneCall } from "lucide-react";
-import { Users, UsersIcon, PlusCircle, Search, Pin, Archive, Star, BellOff, MoreVertical, Trash2 } from "lucide-react";
+import { Users, UsersIcon, PlusCircle, Search, Pin, Archive, Star, BellOff, MoreVertical, Trash2, PhoneCall } from "lucide-react";
 import CreateGroupModal from "./CreateGroupModal";
 import CallHistory from "./CallHistory";
 
@@ -18,8 +17,7 @@ const Sidebar = () => {
   const { onlineUsers, authUser, toggleArchive, togglePin } = useAuthStore();
   const { clearChat } = useChatStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState<"users" | "groups" | "calls">("users");
-  const [activeTab, setActiveTab] = useState<"users" | "groups" | "archived" | "starred">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "groups" | "calls" | "archived" | "starred">("users");
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -185,55 +183,6 @@ const Sidebar = () => {
       </div>
       {/* List */}
       <div className="flex-1 overflow-y-auto w-full py-4 px-2 space-y-2 custom-scrollbar">
-        {activeTab === "calls" ? (
-          <CallHistory />
-        ) : activeTab === "users" ? (
-          <>
-            {filteredUsers.map((user) => (
-              <button
-                key={user._id}
-                onClick={() => setSelectedUser(user)}
-                className={`
-                  w-full flex items-center gap-4 px-3 py-2 rounded-2xl transition-all duration-200
-                  group relative shadow-sm
-                  ${selectedUser?._id === user._id
-                    ? "bg-gradient-to-r from-primary/30 via-accent/20 to-secondary/30 ring-2 ring-primary/60 scale-[1.03] shadow-lg"
-                    : "hover:bg-base-200/60 hover:scale-[1.01]"}
-                `}
-              >
-                <div className="relative flex-shrink-0">
-                  <img
-                    src={user.profilePic || "/avatar.png"}
-                    alt={user.name}
-                    className={`size-12 object-cover rounded-full border-2 ${selectedUser?._id === user._id ? "border-primary shadow-primary/40" : "border-base-300"}`}
-                  />
-                  {onlineUsers.includes(user._id) && (
-                    <span
-                      className="absolute bottom-1 right-1 size-3 bg-gradient-to-br from-green-400 via-green-500 to-emerald-400 rounded-full ring-2 ring-zinc-900 animate-pulse-glow"
-                    />
-                  )}
-                </div>
-                {/* User info - only visible on larger screens */}
-                <div className="hidden lg:block text-left min-w-0 flex-1">
-                  <div className="font-semibold truncate text-white/90 text-base drop-shadow">
-                    {user.fullName}
-                  </div>
-                  <div className="text-xs text-zinc-300 flex items-center gap-1">
-                    {onlineUsers.includes(user._id) ? (
-                      <span className="text-green-400 font-bold animate-pulse">● Online</span>
-                    ) : (
-                      <span className="text-zinc-500">Offline</span>
-                    )}
-                  </div>
-                </div>
-                {/* Animated highlight for selected user */}
-                {selectedUser?._id === user._id && (
-                  <span className="absolute -left-2 -top-2 w-4 h-4 bg-gradient-to-br from-primary to-accent rounded-full blur-sm opacity-60 animate-pulse" />
-                )}
-              </button>
-            ))}
-            {filteredUsers.length === 0 && (
-              <div className="text-center text-zinc-400 py-6 text-lg font-semibold animate-fade-in-up">No online users</div>
         {searchQuery.trim().length >= 2 ? (
               <div className="flex flex-col gap-4 hidden lg:flex">
                 {isSearchingGlobal ? (
@@ -311,7 +260,11 @@ const Sidebar = () => {
                   </>
                 )}
               </div>
-            ) : activeTab === "users" ? (
+            ) : activeTab === "calls" ? (
+          <CallHistory />
+            ) : activeTab === "calls" ? (
+              <CallHistory />
+        ) : activeTab === "users" ? (
               <>
                 {sortedUsers.map((user) => {
                   const isPinned = authUser?.pinnedChats?.includes(user._id);

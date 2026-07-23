@@ -12,10 +12,6 @@ export class WebRTCManager {
 
   constructor(config?: RTCConfiguration) {
     this.config = config;
-  private config?: RTCConfiguration;
-
-  constructor(config?: RTCConfiguration) {
-    this.config = config;
     // Default STUN server
     if (!this.config) {
       this.config = {

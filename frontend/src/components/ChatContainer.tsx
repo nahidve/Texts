@@ -6,8 +6,8 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
-import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Phone, Video } from "lucide-react";
-import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Mic, Star, Clock, BellOff } from "lucide-react";
+// import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Phone, Video } from "lucide-react";
+import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Mic, Star, Clock, BellOff, Phone, Video } from "lucide-react";
 import ForwardModal from "./ForwardModal";
 import VoiceMessage from "./VoiceMessage";
 

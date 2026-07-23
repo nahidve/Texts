@@ -26,6 +26,12 @@ const busyUsers = new Set<string>();
 // Track active group calls: GroupId -> Set of UserIds
 const activeGroupCalls = new Map<string, Set<string>>();
 
+export function getReceiverSocketId(userId: string) {
+    const sockets = userSockets.get(userId);
+    if (sockets) return Array.from(sockets);
+    return null;
+}
+
 io.on("connection", (socket) => {
     console.log("A user connected", socket.id);
 

@@ -11,7 +11,6 @@ const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { sendMessage, selectedGroup, selectedUser, editingMessage, editMessage, setEditingMessage, replyingToMessage, setReplyingToMessage } = useChatStore();
   const { socket } = useAuthStore();
 
