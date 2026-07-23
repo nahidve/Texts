@@ -55,7 +55,6 @@ io.on("connection", (socket) => {
         console.log("A user joined the room", socket.id, roomId);
     });
 
-<<<<<<< HEAD
     socket.on("typing", ({ receiverId, groupId }) => {
         if (typeof userId === "string") {
             if (groupId) {
@@ -65,7 +64,10 @@ io.on("connection", (socket) => {
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("userTyping", { userId });
                 }
-=======
+            }
+        }
+    });
+
     // --- WebRTC & Calling Signaling ---
 
     // 1. Initiate Call
@@ -82,12 +84,10 @@ io.on("connection", (socket) => {
                     callerInfo,
                     callType 
                 });
->>>>>>> cd95b52c2e4fef0bb89e2cf4945001df1e7de7e9
             }
         }
     });
 
-<<<<<<< HEAD
     socket.on("stopTyping", ({ receiverId, groupId }) => {
         if (typeof userId === "string") {
             if (groupId) {
@@ -100,7 +100,7 @@ io.on("connection", (socket) => {
             }
         }
     });
-=======
+
     // 2. Accept Call
     socket.on("CALL_ACCEPT", ({ callerId }) => {
         const callerSocketId = getReceiverSocketId(callerId);
@@ -164,8 +164,6 @@ io.on("connection", (socket) => {
             busyUsers.delete(userId);
         }
     });
-
->>>>>>> cd95b52c2e4fef0bb89e2cf4945001df1e7de7e9
 });
 
 
