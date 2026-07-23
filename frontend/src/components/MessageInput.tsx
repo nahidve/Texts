@@ -11,6 +11,7 @@ const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { sendMessage, selectedGroup, selectedUser, editingMessage, editMessage, setEditingMessage, replyingToMessage, setReplyingToMessage } = useChatStore();
   const { socket } = useAuthStore();
 
@@ -73,7 +74,7 @@ const MessageInput = () => {
 
     // Capture duration from ref (always accurate regardless of state timing)
     const finalDuration = durationRef.current;
-    
+
     setIsRecording(false);
     setIsRecordingPaused(false);
     setRecordingDuration(0);
@@ -85,12 +86,12 @@ const MessageInput = () => {
         groupId: selectedGroup?._id
       });
     }
-    
+
     return new Promise<void>((resolve) => {
       mediaRecorderRef.current!.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         audioChunksRef.current = [];
-        
+
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
         reader.onloadend = async () => {
@@ -107,7 +108,7 @@ const MessageInput = () => {
             setReplyingToMessage(null);
             setIsSilent(false);
             setScheduledFor("");
-          } catch(e) {
+          } catch (e) {
             console.error("Failed to send audio:", e);
             toast.error("Failed to send audio message");
           }
@@ -115,7 +116,7 @@ const MessageInput = () => {
         };
         reader.onerror = () => resolve(); // don't hang forever
       };
-      
+
       mediaRecorderRef.current!.stop();
       // Stop all tracks so microphone indicator goes away
       mediaRecorderRef.current!.stream?.getTracks().forEach(t => t.stop());
@@ -129,8 +130,8 @@ const MessageInput = () => {
       const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
         : MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : 'audio/ogg';
+          ? 'audio/webm'
+          : 'audio/ogg';
 
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
@@ -224,6 +225,19 @@ const MessageInput = () => {
       return;
     }
 
+    let finalMentions: string[] = [];
+    if (selectedGroup) {
+      if (text.includes("@all")) {
+        finalMentions = selectedGroup.members.map((m: any) => m.user._id);
+      } else {
+        selectedGroup.members.forEach((m: any) => {
+          if (m.user && text.includes(`@${m.user.fullName}`)) {
+            finalMentions.push(m.user._id);
+          }
+        });
+      }
+    }
+
     try {
       await sendMessage({
         text: text.trim(),
@@ -242,7 +256,7 @@ const MessageInput = () => {
       setScheduledFor("");
       setShowEmojiPicker(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      
+
       if (socket) {
         socket.emit("stopTyping", {
           receiverId: selectedUser?._id,
@@ -264,9 +278,9 @@ const MessageInput = () => {
         receiverId: selectedUser?._id,
         groupId: selectedGroup?._id
       });
-      
+
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      
+
       typingTimeoutRef.current = setTimeout(() => {
         socket.emit("stopTyping", {
           receiverId: selectedUser?._id,
@@ -298,7 +312,7 @@ const MessageInput = () => {
   };
 
   const filteredMembers = selectedGroup
-    ? selectedGroup.members.filter((m: any) => m.user.fullName.toLowerCase().includes(mentionQuery))
+    ? selectedGroup.members.filter((m: any) => m.user?.fullName?.toLowerCase().includes(mentionQuery))
     : [];
 
   return (
@@ -338,12 +352,12 @@ const MessageInput = () => {
           </div>
           {filteredMembers.map((m: any) => (
             <div
-              key={m.user._id}
+              key={m.user?._id || Math.random()}
               className="px-4 py-2 hover:bg-base-200 cursor-pointer flex items-center gap-3 transition-colors"
-              onClick={() => insertMention(m.user.fullName)}
+              onClick={() => m.user && insertMention(m.user.fullName)}
             >
-              <img src={m.user.profilePic || "/avatar.png"} alt="" className="size-8 rounded-full object-cover" />
-              <span className="font-medium text-sm">{m.user.fullName}</span>
+              <img src={m.user?.profilePic || "/avatar.png"} alt="" className="size-8 rounded-full object-cover" />
+              <span className="font-medium text-sm">{m.user?.fullName || "Unknown"}</span>
             </div>
           ))}
         </div>
@@ -352,7 +366,7 @@ const MessageInput = () => {
       {/* Emoji Picker Popup */}
       {showEmojiPicker && !editingMessage && (
         <div className="absolute bottom-full right-4 mb-2 z-50 shadow-2xl rounded-2xl overflow-hidden border border-base-300">
-          <EmojiPicker 
+          <EmojiPicker
             onEmojiClick={(emojiData) => {
               setText(prev => prev + emojiData.emoji);
             }}
@@ -389,9 +403,8 @@ const MessageInput = () => {
       {/* Input */}
       <form
         onSubmit={handleSendMessage}
-        className={`relative flex items-center gap-3 bg-base-200/70 border backdrop-blur-md shadow-xl px-5 py-3 ${
-          editingMessage || replyingToMessage ? 'rounded-b-2xl rounded-t-none border-primary/30 border-t-0 bg-primary/5' : 'rounded-2xl border-base-300'
-        }`}
+        className={`relative flex items-center gap-3 bg-base-200/70 border backdrop-blur-md shadow-xl px-5 py-3 ${editingMessage || replyingToMessage ? 'rounded-b-2xl rounded-t-none border-primary/30 border-t-0 bg-primary/5' : 'rounded-2xl border-base-300'
+          }`}
       >
         {isRecording ? (
           <div className="flex-1 flex items-center justify-between px-2 w-full animate-in slide-in-from-bottom-2 fade-in duration-200">
@@ -403,7 +416,7 @@ const MessageInput = () => {
               <span className={`font-mono font-bold tracking-wider text-lg ${isRecordingPaused ? 'text-base-content/60' : 'text-red-500'}`}>
                 {formatDuration(recordingDuration)}
               </span>
-              
+
               <div className={`flex items-center gap-1 ml-4 ${isRecordingPaused ? 'opacity-30' : 'opacity-80'}`}>
                 <span className={`w-1 h-3 bg-red-500 rounded-full ${!isRecordingPaused && 'animate-pulse'}`} style={{ animationDelay: '0ms' }}></span>
                 <span className={`w-1 h-4 bg-red-500 rounded-full ${!isRecordingPaused && 'animate-pulse'}`} style={{ animationDelay: '150ms' }}></span>
@@ -432,7 +445,7 @@ const MessageInput = () => {
                     <Pause size={18} className="fill-current" />
                   </button>
                 )}
-                
+
                 <button
                   type="button"
                   onClick={cancelRecording}
@@ -467,9 +480,8 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${
-              imagePreview ? "text-emerald-500" : "text-zinc-400"
-            }`}
+            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${imagePreview ? "text-emerald-500" : "text-zinc-400"
+              }`}
           >
             <Image size={22} />
           </button>
@@ -529,12 +541,12 @@ const MessageInput = () => {
                   >
                     <Clock size={16} />
                   </button>
-                  <input 
-                    type="datetime-local" 
+                  <input
+                    type="datetime-local"
                     value={scheduledFor}
                     onChange={(e) => setScheduledFor(e.target.value)}
                     className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-base-100 border border-base-300 rounded p-1 text-xs"
-                    style={{pointerEvents: 'auto'}}
+                    style={{ pointerEvents: 'auto' }}
                   />
                 </div>
               </>

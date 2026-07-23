@@ -8,6 +8,7 @@ import { connectDB } from "./lib/db.js";
 
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
+import callRoutes from "./routes/call.route.js";
 import groupRoutes from "./routes/group.route.js";
 import searchRoutes from "./routes/search.route.js";
 import { app, server } from "./lib/socket.js";
@@ -30,6 +31,7 @@ app.get("/health", (req, res) => res.sendStatus(200));
 // Mount authentication routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/calls", callRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/search", searchRoutes);
 

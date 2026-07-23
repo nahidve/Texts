@@ -1,13 +1,17 @@
 export class WebRTCManager {
-  private peerConnection: RTCPeerConnection | null = null;
+  private peerConnections = new Map<string, RTCPeerConnection>();
   private localStream: MediaStream | null = null;
-  public remoteStream: MediaStream = new MediaStream();
+  public remoteStreams = new Map<string, MediaStream>();
 
   // Callbacks
-  public onIceCandidate?: (candidate: RTCIceCandidate) => void;
-  public onRemoteTrack?: (stream: MediaStream) => void;
-  public onConnectionStateChange?: (state: RTCPeerConnectionState) => void;
+  public onIceCandidate?: (targetId: string, candidate: RTCIceCandidate) => void;
+  public onRemoteTrack?: (targetId: string, stream: MediaStream) => void;
+  public onStreamRemoved?: (targetId: string) => void;
 
+  private config?: RTCConfiguration;
+
+  constructor(config?: RTCConfiguration) {
+    this.config = config;
   private config?: RTCConfiguration;
 
   constructor(config?: RTCConfiguration) {
@@ -23,36 +27,44 @@ export class WebRTCManager {
     }
   }
 
-  private initPeerConnection() {
-    this.peerConnection = new RTCPeerConnection(this.config);
+  private initPeerConnection(targetId: string): RTCPeerConnection {
+    if (this.peerConnections.has(targetId)) {
+      return this.peerConnections.get(targetId)!;
+    }
 
-    this.peerConnection.onicecandidate = (event) => {
+    const pc = new RTCPeerConnection(this.config);
+    this.peerConnections.set(targetId, pc);
+    this.remoteStreams.set(targetId, new MediaStream());
+
+    pc.onicecandidate = (event) => {
       if (event.candidate && this.onIceCandidate) {
-        this.onIceCandidate(event.candidate);
+        this.onIceCandidate(targetId, event.candidate);
       }
     };
 
-    this.peerConnection.ontrack = (event) => {
+    pc.ontrack = (event) => {
+      const stream = this.remoteStreams.get(targetId)!;
       event.streams[0].getTracks().forEach((track) => {
-        this.remoteStream.addTrack(track);
+        stream.addTrack(track);
       });
       if (this.onRemoteTrack) {
-        this.onRemoteTrack(this.remoteStream);
+        this.onRemoteTrack(targetId, stream);
       }
     };
 
-    this.peerConnection.onconnectionstatechange = () => {
-      if (this.peerConnection && this.onConnectionStateChange) {
-        this.onConnectionStateChange(this.peerConnection.connectionState);
+    pc.oniceconnectionstatechange = () => {
+      if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed" || pc.iceConnectionState === "closed") {
+        this.removePeer(targetId);
       }
     };
 
-    // Add local tracks if available
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => {
-        this.peerConnection?.addTrack(track, this.localStream!);
+        pc.addTrack(track, this.localStream!);
       });
     }
+
+    return pc;
   }
 
   public async getLocalStream(isVideo: boolean): Promise<MediaStream> {
@@ -68,35 +80,39 @@ export class WebRTCManager {
     }
   }
 
-  public async createOffer(): Promise<RTCSessionDescriptionInit> {
-    if (!this.peerConnection) this.initPeerConnection();
-    const offer = await this.peerConnection!.createOffer();
-    await this.peerConnection!.setLocalDescription(offer);
+  public async createOffer(targetId: string): Promise<RTCSessionDescriptionInit> {
+    const pc = this.initPeerConnection(targetId);
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
     return offer;
   }
 
-  public async createAnswer(offer: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
-    if (!this.peerConnection) this.initPeerConnection();
-    await this.peerConnection!.setRemoteDescription(new RTCSessionDescription(offer));
-    const answer = await this.peerConnection!.createAnswer();
-    await this.peerConnection!.setLocalDescription(answer);
+  public async handleOffer(targetId: string, offer: RTCSessionDescriptionInit) {
+    const pc = this.initPeerConnection(targetId);
+    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+  }
+
+  public async createAnswer(targetId: string, offer: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
+    const pc = this.initPeerConnection(targetId);
+    if (pc.signalingState !== "have-remote-offer") {
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    }
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
     return answer;
   }
 
-  public async handleOffer(offer: RTCSessionDescriptionInit) {
-    if (!this.peerConnection) this.initPeerConnection();
-    await this.peerConnection!.setRemoteDescription(new RTCSessionDescription(offer));
-  }
-
-  public async handleAnswer(answer: RTCSessionDescriptionInit) {
-    if (this.peerConnection) {
-      await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+  public async handleAnswer(targetId: string, answer: RTCSessionDescriptionInit) {
+    const pc = this.peerConnections.get(targetId);
+    if (pc) {
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
     }
   }
 
-  public async handleIceCandidate(candidate: RTCIceCandidateInit) {
-    if (this.peerConnection) {
-      await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+  public async handleIceCandidate(targetId: string, candidate: RTCIceCandidateInit) {
+    const pc = this.peerConnections.get(targetId);
+    if (pc) {
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
     }
   }
 
@@ -116,18 +132,31 @@ export class WebRTCManager {
     }
   }
 
+  public switchCamera() {
+    // Future ready: cycle through available video devices and replace track
+  }
+
+  public removePeer(targetId: string) {
+    const pc = this.peerConnections.get(targetId);
+    if (pc) {
+      pc.close();
+      this.peerConnections.delete(targetId);
+    }
+    this.remoteStreams.delete(targetId);
+    if (this.onStreamRemoved) {
+      this.onStreamRemoved(targetId);
+    }
+  }
+
   public endCall() {
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => track.stop());
       this.localStream = null;
     }
-    if (this.peerConnection) {
-      this.peerConnection.close();
-      this.peerConnection = null;
-    }
-    this.remoteStream = new MediaStream();
+    this.peerConnections.forEach((pc) => pc.close());
+    this.peerConnections.clear();
+    this.remoteStreams.clear();
   }
 }
 
-// Export a singleton instance
 export const webrtcManager = new WebRTCManager();

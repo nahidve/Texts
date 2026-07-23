@@ -16,7 +16,7 @@ const ChatHeader = () => {
   const isOnline = selectedUser && onlineUsers.includes(selectedUser._id);
   const targetId = selectedGroup?._id || selectedUser?._id;
   const isGroup = !!selectedGroup;
-  
+
   const isMuted = authUser?.mutedChats?.some((c: any) => c.chatId === targetId && c.chatModel === (isGroup ? 'Group' : 'User') && new Date(c.mutedUntil) > new Date());
   const isArchived = isGroup ? authUser?.archivedGroups?.includes(targetId) : authUser?.archivedChats?.includes(targetId);
 
@@ -46,7 +46,7 @@ const ChatHeader = () => {
               <div className="flex items-center gap-2">
                 <div className={`size-2 rounded-full ${isOnline ? "bg-success" : "bg-base-300"}`} />
                 <p className="text-sm font-medium text-base-content/70">
-                  {isOnline ? "Online" : "Offline"}
+                  {isOnline ? "Online" : selectedUser.lastSeen ? `last seen at ${new Date(selectedUser.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "Offline"}
                 </p>
               </div>
             ) : (
@@ -90,6 +90,7 @@ const ChatHeader = () => {
             <>
               <button
                 onClick={() => initiateCall(selectedUser, "audio")}
+                className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
                 disabled={!isOnline}
                 className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Voice Call"
@@ -98,6 +99,8 @@ const ChatHeader = () => {
               </button>
               <button
                 onClick={() => initiateCall(selectedUser, "video")}
+                className="p-2 rounded-xl hover:bg-base-200 transition-all duration-200 group"
+                title="Video Call"
                 disabled={!isOnline}
                 className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -117,32 +120,32 @@ const ChatHeader = () => {
 
           {/* More Options Dropdown */}
           <div className="relative">
-            <button 
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group"
             >
               <MoreVertical className="size-5 text-base-content/70 group-hover:text-base-content" />
             </button>
             {isDropdownOpen && (
-              <div 
+              <div
                 className="absolute right-0 top-full mt-2 w-48 bg-base-100 shadow-2xl rounded-xl border border-base-300 py-2 z-50 animate-in fade-in zoom-in-95"
                 onClick={() => setIsDropdownOpen(false)}
               >
-                <button 
+                <button
                   onClick={() => toggleMute(targetId!, isGroup, isMuted ? 0 : 8)}
                   className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
                 >
                   <BellOff className="size-4" />
                   {isMuted ? 'Unmute' : 'Mute for 8 hours'}
                 </button>
-                <button 
+                <button
                   onClick={() => toggleMute(targetId!, isGroup, isMuted ? 0 : 24 * 7)}
                   className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
                 >
                   <BellOff className="size-4" />
                   {isMuted ? 'Unmute' : 'Mute for 1 week'}
                 </button>
-                <button 
+                <button
                   onClick={() => toggleMute(targetId!, isGroup, isMuted ? 0 : -1)}
                   className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
                 >
@@ -150,7 +153,7 @@ const ChatHeader = () => {
                   {isMuted ? 'Unmute' : 'Mute forever'}
                 </button>
                 <div className="border-t border-base-300 my-1"></div>
-                <button 
+                <button
                   onClick={() => {
                     const url = prompt("Enter wallpaper URL (or leave blank to remove):");
                     if (url !== null) setWallpaper(targetId!, isGroup, url);
@@ -161,14 +164,14 @@ const ChatHeader = () => {
                   Set Wallpaper
                 </button>
                 <div className="border-t border-base-300 my-1"></div>
-                <button 
+                <button
                   onClick={() => toggleArchive(targetId!, isGroup)}
                   className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
                 >
                   <Archive className="size-4" />
                   {isArchived ? 'Unarchive Chat' : 'Archive Chat'}
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     if (window.confirm("Are you sure you want to clear this chat? This action cannot be undone.")) {
                       clearChat(targetId!, isGroup);
@@ -184,7 +187,7 @@ const ChatHeader = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Local Search Bar */}
       {isSearchOpen && (
         <div className="mt-3 relative animate-in slide-in-from-top-2 fade-in duration-200">

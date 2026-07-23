@@ -27,32 +27,37 @@ export interface MessageType extends Document {
     isSilent?: boolean;
     scheduledFor?: Date;
     isScheduled?: boolean;
+    callEvent?: {
+        status: string;
+        callType: string;
+        duration: number;
+    };
     deletedFor?: mongoose.Types.ObjectId[];
     starredBy?: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
 
-const messageSchema=new mongoose.Schema({
-    senderId:{
-        type:mongoose.Schema.Types.ObjectId, //this will store the id of the user who is sending the message along with the message and other details
-        ref:"User",// this is the reference to the user model
-        required:true,
+const messageSchema = new mongoose.Schema({
+    senderId: {
+        type: mongoose.Schema.Types.ObjectId, //this will store the id of the user who is sending the message along with the message and other details
+        ref: "User",// this is the reference to the user model
+        required: true,
     },
-    receiverId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User",
+    receiverId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
     },
     groupId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Group",
     },
     //these below are not required true because we can send a message without an image or text or both or none of them; having required true would mean that we need to send both image and text all times
-    text:{
-        type:String,
+    text: {
+        type: String,
     },
-    image:{
-        type:String,
+    image: {
+        type: String,
     },
     audio: {
         type: String,
@@ -104,6 +109,11 @@ const messageSchema=new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    callEvent: {
+        status: String, // e.g., "missed", "ended", "rejected", "cancelled", "busy"
+        callType: String, // "audio" or "video"
+        duration: { type: Number, default: 0 }
+    },
     deletedFor: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
@@ -113,9 +123,9 @@ const messageSchema=new mongoose.Schema({
         ref: "User"
     }]
 },
-{timestamps:true}
+    { timestamps: true }
 );
 
-const Message:Model<MessageType>=mongoose.model<MessageType>("Message", messageSchema);
+const Message: Model<MessageType> = mongoose.model<MessageType>("Message", messageSchema);
 
 export default Message;

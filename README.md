@@ -1,4 +1,4 @@
-# [Texts](https://texts-qfdi.onrender.com/)
+# [Texts](https://texts-frontend-swart.vercel.app/)
 
 **Texts** is a modern, full-stack real-time chat application built from the ground up in TypeScript. It leverages a robust, type-safe architecture across both frontend and backend, ensuring reliability, maintainability, and developer productivity. Originally developed in JavaScript/JSX, the project was fully migrated to TypeScript to meet the highest standards of code quality and to align with the requirements of leading technology companies.
 
@@ -213,4 +213,4 @@ This project is licensed under the ISC License.
 
 ---
 
-**Texts** is a demonstration of modern, type-safe, real-time web application development, designed to meet the standards of top-tier technology companies. The migration to TypeScript was a strategic decision to ensure long-term maintainability, reliability, and developer productivity. 
+**Texts** is a demonstration of modern, type-safe, real-time web application development, designed to meet the standards of top-tier technology companies. The migration to TypeScript was a strategic decision to ensure long-term maintainability, reliability, and developer productivity.

@@ -3,123 +3,128 @@ import { Request, Response } from "express";
 import Message from "../models/message.model.js";
 import Group from "../models/group.model.js";
 import cloudinary from "../lib/cloudinary.js";
-import { getReceiverSocketId } from "../lib/socket.js";
 import { io } from "../lib/socket.js";
 
 //get all users except yourself for the sidebar
-export const getUsersForSidebar=async(req:Request, res:Response)=>{
+export const getUsersForSidebar = async (req: Request, res: Response) => {
     //get all users except yourself
-    try{
-        const loggedInUserId=(req.user!._id as any);
-        const filteredUsers=await User.find({_id:{$ne:loggedInUserId}}).select("-password"); //this will return all users except the logged in user
+    try {
+        const loggedInUserId = (req.user!._id as any);
+        const loggedInUserId = (req.user as any)._id;
+        const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password"); //this will return all users except the logged in user
 
         res.status(200).json(filteredUsers); //send the users to the frontend
     }
-    catch(error){
-        const err=error as Error;
+    catch (error) {
+        const err = error as Error;
         console.log("Error in getUsersForSidebar controller", err.message);
-        res.status(500).json({message:"Internal server error"});
+        res.status(500).json({ message: "Internal server error" });
     }
 }
 
 //get messages between two users: their history and latest messages
-export const getMessages=async(req:Request, res:Response)=>{
-    try{
-        const {id:userToChatId}=req.params; //this is the id of the user to chat with
-        const myId=(req.user!._id as any); //this is the id of the logged in user
+export const getMessages = async (req: Request, res: Response) => {
+    try {
+        const { id: userToChatId } = req.params; //this is the id of the user to chat with
+        const myId = (req.user!._id as any); //this is the id of the logged in user
 
         if (userToChatId === "undefined" || !userToChatId) {
             return res.status(200).json([]);
         }
+        const myId = (req.user as any)._id;
 
-        const messages=await Message.find({ //this will return all messages between the two users
-            $or:[ 
-                {senderId:myId, receiverId:userToChatId}, 
-                {senderId:userToChatId, receiverId:myId}
+        const messages = await Message.find({ //this will return all messages between the two users
+            $or: [
+                { senderId: myId, receiverId: userToChatId },
+                { senderId: userToChatId, receiverId: myId }
             ]
-        }).sort({createdAt:1}).populate("replyTo", "text image senderId isForwarded"); //this will sort the messages in ascending order of their creation date
+        }).sort({ createdAt: 1 }).populate("replyTo", "text image senderId isForwarded"); //this will sort the messages in ascending order of their creation date
 
         res.status(200).json(messages); //send the messages to the frontend
     }
-    catch(error){ //you could build a middleware to specifically handle errors if messages are not found or not rendered but i have kept in simple and basic: if there is an error, we will send a 500 status code and a message to the frontend
-        const err=error as Error;
+    catch (error) { //you could build a middleware to specifically handle errors if messages are not found or not rendered but i have kept in simple and basic: if there is an error, we will send a 500 status code and a message to the frontend
+        const err = error as Error;
         console.log("Error in getMessages controller", err.message);
-        res.status(500).json({message:"Internal server error"});
+        res.status(500).json({ message: "Internal server error" });
     }
 }
 
 //send a message to a user
 export const sendMessage = async (req: Request, res: Response) => {
     try {
-      const { text, image, audio, audioDuration, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
-      const { id: receiverId } = req.params;
-      const senderId = (req.user!._id as any);
-  
-      if (!text && !image && !audio) {
-        return res.status(400).json({ message: "Text, image, or audio is required" });
-      }
-  
-      let imageUrl;
-      if (image) {
-        const uploadResponse = await cloudinary.uploader.upload(image);
-        imageUrl = uploadResponse.secure_url;
-      }
+        const { text, image, audio, audioDuration, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
+        const { id: receiverId } = req.params;
+        const senderId = (req.user!._id as any);
+        const senderId = (req.user as any)._id;
 
-      let audioUrl;
-      if (audio) {
-        const uploadResponse = await cloudinary.uploader.upload(audio, { resource_type: "video" });
-        audioUrl = uploadResponse.secure_url;
-      }
-  
-      const newMessage = new Message({
-        senderId,
-        receiverId,
-        text,
-        image: imageUrl,
-        audio: audioUrl,
-        audioDuration,
-        replyTo: replyTo || null,
-        isForwarded: isForwarded || false,
-        isSilent: isSilent || false,
-        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
-        isScheduled: !!scheduledFor
-      });
-  
-      await newMessage.save();
-      await newMessage.populate("replyTo", "text image senderId isForwarded");
-  
-      const receiverSocketId = getReceiverSocketId(receiverId as string);
-      const senderSocketId = getReceiverSocketId(senderId as string);
-      
-      if (!scheduledFor) {
-        if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", newMessage);
-        if (senderSocketId) io.to(senderSocketId).emit("newMessage", newMessage);
-      } else {
-        // Just emit to sender to show it's scheduled
-        if (senderSocketId) io.to(senderSocketId).emit("newMessage", newMessage);
-        
-        const delay = new Date(scheduledFor).getTime() - Date.now();
-        if (delay > 0) {
-            setTimeout(async () => {
-                const msg = await Message.findById(newMessage._id).populate("replyTo", "text image senderId isForwarded");
-                if (msg) {
-                    msg.isScheduled = false;
-                    await msg.save();
-                    if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", msg);
-                    // Also notify sender it was sent
-                    if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", msg);
-                }
-            }, delay);
+        if (!text && !image && !audio) {
+            return res.status(400).json({ message: "Text, image, or audio is required" });
         }
-      }
-  
-      res.status(201).json(newMessage);
+
+        let imageUrl;
+        if (image) {
+            const uploadResponse = await cloudinary.uploader.upload(image);
+            imageUrl = uploadResponse.secure_url;
+        }
+
+        let audioUrl;
+        if (audio) {
+            const uploadResponse = await cloudinary.uploader.upload(audio, { resource_type: "video" });
+            audioUrl = uploadResponse.secure_url;
+        }
+
+        const newMessage = new Message({
+            senderId,
+            receiverId,
+            text,
+            image: imageUrl,
+            audio: audioUrl,
+            audioDuration,
+            replyTo: replyTo || null,
+            isForwarded: isForwarded || false,
+            isSilent: isSilent || false,
+            scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+            isScheduled: !!scheduledFor
+        });
+
+        await newMessage.save();
+        await newMessage.populate("replyTo", "text image senderId isForwarded");
+
+        const receiverSocketId = getReceiverSocketId(receiverId as string);
+        const senderSocketId = getReceiverSocketId(senderId as string);
+
+        if (!scheduledFor) {
+            if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", newMessage);
+            if (senderSocketId) io.to(senderSocketId).emit("newMessage", newMessage);
+        } else {
+            // Just emit to sender to show it's scheduled
+            if (senderSocketId) io.to(senderSocketId).emit("newMessage", newMessage);
+
+            const delay = new Date(scheduledFor).getTime() - Date.now();
+            if (delay > 0) {
+                setTimeout(async () => {
+                    const msg = await Message.findById(newMessage._id).populate("replyTo", "text image senderId isForwarded");
+                    if (msg) {
+                        msg.isScheduled = false;
+                        await msg.save();
+                        if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", msg);
+                        // Also notify sender it was sent
+                        if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", msg);
+                    }
+                }, delay);
+            }
+        }
+        // Emit to receiver and sender (rooms are their user IDs)
+        io.to(receiverId as string).emit("newMessage", newMessage);
+        io.to(senderId as string).emit("newMessage", newMessage);
+
+        res.status(201).json(newMessage);
     } catch (error) {
-        const err=error as Error;
+        const err = error as Error;
         console.log("Error in sendMessage controller", err.message);
-        res.status(500).json({message:"Internal server error"});
+        res.status(500).json({ message: "Internal server error" });
     }
-  };
+};
 
 export const getGroupMessages = async (req: Request, res: Response) => {
     try {
@@ -138,6 +143,7 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
         const { text, image, audio, audioDuration, mentions, poll, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
         const { id: groupId } = req.params;
         const senderId = (req.user!._id as any);
+        const senderId = (req.user as any)._id;
 
         if (!text && !image && !poll && !audio) {
             return res.status(400).json({ message: "Text, image, poll, or audio is required" });
@@ -184,7 +190,7 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
         } else {
             const senderSocketId = getReceiverSocketId(senderId as string);
             if (senderSocketId) io.to(senderSocketId).emit("newGroupMessage", newMessage);
-            
+
             const delay = new Date(scheduledFor).getTime() - Date.now();
             if (delay > 0) {
                 setTimeout(async () => {
@@ -213,6 +219,7 @@ export const votePoll = async (req: Request, res: Response) => {
         const { id: messageId } = req.params;
         const { optionIndex } = req.body;
         const userId = (req.user!._id as any);
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message || !message.poll) {
@@ -234,10 +241,8 @@ export const votePoll = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("pollUpdated", message);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("pollUpdated", message);
-            if (senderSocketId) io.to(senderSocketId).emit("pollUpdated", message);
+            io.to(message.receiverId.toString()).emit("pollUpdated", message);
+            io.to(message.senderId.toString()).emit("pollUpdated", message);
         }
 
         res.status(200).json(message);
@@ -252,6 +257,7 @@ export const pinMessage = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const userId = (req.user!._id as any);
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -270,10 +276,8 @@ export const pinMessage = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("messageUpdated", message);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("messageUpdated", message);
-            if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", message);
+            io.to(message.receiverId.toString()).emit("messageUpdated", message);
+            io.to(message.senderId.toString()).emit("messageUpdated", message);
         }
 
         res.status(200).json(message);
@@ -289,6 +293,7 @@ export const editMessage = async (req: Request, res: Response) => {
         const { id: messageId } = req.params;
         const { text } = req.body;
         const userId = (req.user!._id as any);
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -304,10 +309,8 @@ export const editMessage = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("messageUpdated", message);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("messageUpdated", message);
-            if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", message);
+            io.to(message.receiverId.toString()).emit("messageUpdated", message);
+            io.to(message.senderId.toString()).emit("messageUpdated", message);
         }
 
         res.status(200).json(message);
@@ -323,6 +326,7 @@ export const reactToMessage = async (req: Request, res: Response) => {
         const { id: messageId } = req.params;
         const { emoji } = req.body;
         const userId = (req.user!._id as any);
+        const userId = (req.user as any)._id;
 
         if (!emoji) return res.status(400).json({ message: "Emoji is required" });
 
@@ -357,10 +361,8 @@ export const reactToMessage = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("messageUpdated", message);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("messageUpdated", message);
-            if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", message);
+            io.to(message.receiverId.toString()).emit("messageUpdated", message);
+            io.to(message.senderId.toString()).emit("messageUpdated", message);
         }
 
         res.status(200).json(message);
@@ -375,12 +377,13 @@ export const deleteMessageForMe = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const userId = (req.user!._id as any);
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
 
         if (!message.deletedFor) message.deletedFor = [];
-        
+
         if (!message.deletedFor.includes(userId)) {
             message.deletedFor.push(userId);
             await message.save();
@@ -398,6 +401,7 @@ export const deleteMessageForEveryone = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const userId = (req.user!._id as any);
+        const userId = (req.user as any)._id;
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -412,10 +416,8 @@ export const deleteMessageForEveryone = async (req: Request, res: Response) => {
         if (message.groupId) {
             io.to(`group_${message.groupId}`).emit("messageDeleted", messageId);
         } else if (message.receiverId) {
-            const receiverSocketId = getReceiverSocketId(message.receiverId.toString());
-            const senderSocketId = getReceiverSocketId(message.senderId.toString());
-            if (receiverSocketId) io.to(receiverSocketId).emit("messageDeleted", messageId);
-            if (senderSocketId) io.to(senderSocketId).emit("messageDeleted", messageId);
+            io.to(message.receiverId.toString()).emit("messageDeleted", messageId);
+            io.to(message.senderId.toString()).emit("messageDeleted", messageId);
         }
 
         res.status(200).json({ message: "Message deleted for everyone", messageId });
