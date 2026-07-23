@@ -51,10 +51,12 @@ io.on("connection", (socket) => {
     socket.on("disconnect", async () => {
         console.log("A user disconnected", socket.id);
         if (typeof userId === "string") {
-          delete userSocketMap[userId];
-          try {
-              await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
-          } catch (e) { console.error("Error updating lastSeen", e); }
+          if (userSocketMap[userId] === socket.id) {
+              delete userSocketMap[userId];
+              try {
+                  await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
+              } catch (e) { console.error("Error updating lastSeen", e); }
+          }
         }
         io.emit("getOnlineUsers", Object.keys(userSocketMap));
     });

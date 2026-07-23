@@ -86,7 +86,7 @@ const Sidebar = () => {
               />
               <span className="text-xs text-white/80 font-medium">Show online only</span>
             </label>
-            <span className="text-xs text-accent font-semibold animate-pulse">({onlineUsers.length - 1} online)</span>
+            <span className="text-xs text-accent font-semibold animate-pulse">({Math.max(0, onlineUsers.length - 1)} online)</span>
           </div>
         ) : activeTab === 'groups' ? (
           <div className="mt-3 flex items-center justify-between">
