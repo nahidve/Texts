@@ -6,22 +6,44 @@ import { useAuthStore } from "./useAuthStore";
 type ChatStore = {
   messages: any[];
   users: any[];
+  groups: any[];
   selectedUser: any;
+  selectedGroup: any;
   setSelectedUser: (user: any) => void;
+  setSelectedGroup: (group: any) => void;
   isUsersLoading: boolean;
+  isGroupsLoading: boolean;
   isMessagesLoading: boolean;
   getUsers: () => Promise<void>;
-  getMessages: (userId: string) => Promise<void>;
+  getGroups: () => Promise<void>;
+  getMessages: (id: string, isGroup?: boolean) => Promise<void>;
   sendMessage: (messageData: any) => Promise<void>;
   subscribeToMessages: () => void;
   unsubscribeFromMessages: () => void;
+  votePoll: (messageId: string, optionIndex: number) => Promise<void>;
+  editingMessage: any | null;
+  setEditingMessage: (msg: any) => void;
+  setReplyingToMessage: (msg: any) => void;
+  pinMessage: (messageId: string) => Promise<void>;
+  editMessage: (messageId: string, text: string) => Promise<void>;
+  reactToMessage: (messageId: string, emoji: string) => Promise<void>;
+  deleteMessageForMe: (messageId: string) => Promise<void>;
+  deleteMessageForEveryone: (messageId: string) => Promise<void>;
+  forwardMessage: (messageData: any, recipients: { id: string, isGroup: boolean }[]) => Promise<void>;
+  typingUsers: string[];
 };
 
 export const useChatStore = create<ChatStore>((set, get) => ({
   messages: [],
   users: [],
+  groups: [],
   selectedUser: null,
+  selectedGroup: null,
+  editingMessage: null,
+  replyingToMessage: null,
+  typingUsers: [],
   isUsersLoading: false,
+  isGroupsLoading: false,
   isMessagesLoading: false,
 
   getUsers: async () => {
@@ -36,48 +58,204 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  getMessages: async (userId: string) => {
+  getGroups: async () => {
+    set({ isGroupsLoading: true });
+    try {
+      const res = await axiosInstance.get("/groups");
+      set({ groups: res.data });
+    } catch (error) {
+      toast.error((error as any).response?.data?.message || "Error fetching groups");
+    } finally {
+      set({ isGroupsLoading: false });
+    }
+  },
+
+  getMessages: async (id: string, isGroup = false) => {
     set({ isMessagesLoading: true });
     try {
-      const res = await axiosInstance.get(`/messages/${userId}`);
+      const endpoint = isGroup ? `/messages/group/${id}` : `/messages/${id}`;
+      const res = await axiosInstance.get(endpoint);
       set({ messages: res.data });
     } catch (error) {
-      toast.error((error as any).response.data.message);
+      toast.error((error as any).response?.data?.message || "Error fetching messages");
     } finally {
       set({ isMessagesLoading: false });
     }
   },
   
   sendMessage: async (messageData: any) => {
-    const { selectedUser, messages } = get();
+    const { selectedUser, selectedGroup, messages, replyingToMessage } = get();
     try {
-      const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-      set({ messages: [...messages, res.data] }); //keep old messages and add new ones
+      let endpoint = "";
+      if (selectedGroup) {
+          endpoint = `/messages/send-group/${selectedGroup._id}`;
+      } else if (selectedUser) {
+          endpoint = `/messages/send/${selectedUser._id}`;
+      } else {
+          return;
+      }
+      
+      const payload = replyingToMessage ? { ...messageData, replyTo: replyingToMessage._id } : messageData;
+      const res = await axiosInstance.post(endpoint, payload);
+      set({ messages: [...messages, res.data], replyingToMessage: null });
     } catch (error) {
-      toast.error((error as any).response.data.message);
+      toast.error((error as any).response?.data?.message || "Error sending message");
     }
   },
 
   subscribeToMessages: () => {
-    const { selectedUser } = get();
-    if (!selectedUser) return;
+    const { selectedUser, selectedGroup } = get();
+    if (!selectedUser && !selectedGroup) return;
 
     const socket = useAuthStore.getState().socket;
+    if (!socket) return;
 
-    socket.on("newMessage", (newMessage: any) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
-      if (!isMessageSentFromSelectedUser) return;
+    // Remove old listeners to prevent duplicates
+    socket.off("newMessage");
+    socket.off("newGroupMessage");
+    socket.off("pollUpdated");
 
-      set({
-        messages: [...get().messages, newMessage],
+    if (selectedUser) {
+      socket.on("newMessage", (newMessage) => {
+        const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+        if (!isMessageSentFromSelectedUser) return;
+
+        set({
+          messages: [...get().messages, newMessage],
+        });
       });
+    }
+
+    if (selectedGroup) {
+      socket.on("newGroupMessage", (newMessage) => {
+        if (newMessage.groupId !== selectedGroup._id) return;
+        set({
+          messages: [...get().messages, newMessage],
+        });
+      });
+    }
+
+    socket.on("pollUpdated", (updatedMessage) => {
+      set({
+        messages: get().messages.map(m => m._id === updatedMessage._id ? updatedMessage : m)
+      });
+    });
+
+    socket.on("messageUpdated", (updatedMessage) => {
+      set({
+        messages: get().messages.map(m => m._id === updatedMessage._id ? updatedMessage : m)
+      });
+    });
+
+    socket.on("userTyping", ({ userId, groupId }) => {
+      const { selectedUser, selectedGroup } = get();
+      if ((selectedGroup && groupId === selectedGroup._id) || (selectedUser && userId === selectedUser._id && !groupId)) {
+        set({ typingUsers: [...new Set([...get().typingUsers, userId])] });
+      }
+    });
+
+    socket.on("userStoppedTyping", ({ userId }) => {
+      set({ typingUsers: get().typingUsers.filter(id => id !== userId) });
+    });
+
+    socket.on("messageDeleted", (messageId) => {
+      set({ messages: get().messages.filter(m => m._id !== messageId) });
     });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
-    socket.off("newMessage");
+    socket?.off("newMessage");
+    socket?.off("newGroupMessage");
+    socket?.off("pollUpdated");
+    socket?.off("messageUpdated");
+    socket?.off("userTyping");
+    socket?.off("userStoppedTyping");
+    socket?.off("messageDeleted");
   },
 
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedUser: (selectedUser) => set({ selectedUser, selectedGroup: null, typingUsers: [], replyingToMessage: null }),
+  setSelectedGroup: (selectedGroup) => set({ selectedGroup, selectedUser: null, typingUsers: [], replyingToMessage: null }),
+
+  votePoll: async (messageId: string, optionIndex: number) => {
+    try {
+      const res = await axiosInstance.post(`/messages/${messageId}/vote`, { optionIndex });
+      set({
+        messages: get().messages.map(m => m._id === messageId ? res.data : m)
+      });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to vote on poll");
+    }
+  },
+
+  setEditingMessage: (msg) => set({ editingMessage: msg }),
+  setReplyingToMessage: (msg) => set({ replyingToMessage: msg }),
+
+  pinMessage: async (messageId: string) => {
+    try {
+      const res = await axiosInstance.put(`/messages/${messageId}/pin`);
+      set({
+        messages: get().messages.map(m => m._id === messageId ? res.data : m)
+      });
+      toast.success(res.data.isPinned ? "Message pinned" : "Message unpinned");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to pin message");
+    }
+  },
+
+  editMessage: async (messageId: string, text: string) => {
+    try {
+      const res = await axiosInstance.put(`/messages/${messageId}/edit`, { text });
+      set({
+        messages: get().messages.map(m => m._id === messageId ? res.data : m),
+        editingMessage: null
+      });
+      toast.success("Message edited successfully");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to edit message");
+    }
+  },
+
+  reactToMessage: async (messageId: string, emoji: string) => {
+    try {
+      const res = await axiosInstance.put(`/messages/${messageId}/react`, { emoji });
+      set({
+        messages: get().messages.map(m => m._id === messageId ? res.data : m)
+      });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to react to message");
+    }
+  },
+
+  deleteMessageForMe: async (messageId: string) => {
+    try {
+      await axiosInstance.delete(`/messages/${messageId}/me`);
+      set({ messages: get().messages.filter(m => m._id !== messageId) });
+      toast.success("Message deleted for you");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete message");
+    }
+  },
+
+  deleteMessageForEveryone: async (messageId: string) => {
+    try {
+      await axiosInstance.delete(`/messages/${messageId}/everyone`);
+      // No need to set messages here, the socket event handles it
+      toast.success("Message deleted for everyone");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete message for everyone");
+    }
+  },
+
+  forwardMessage: async (messageData: any, recipients: { id: string, isGroup: boolean }[]) => {
+    try {
+      for (const r of recipients) {
+        const endpoint = r.isGroup ? `/messages/send-group/${r.id}` : `/messages/send/${r.id}`;
+        await axiosInstance.post(endpoint, { ...messageData, isForwarded: true });
+      }
+      toast.success("Message forwarded successfully");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to forward message");
+    }
+  }
 }));

@@ -2,9 +2,27 @@ import mongoose, { Document, Model } from "mongoose";
 
 export interface MessageType extends Document {
     senderId: mongoose.Types.ObjectId;
-    receiverId: mongoose.Types.ObjectId;
+    receiverId?: mongoose.Types.ObjectId;
+    groupId?: mongoose.Types.ObjectId;
     text?: string;
     image?: string;
+    mentions?: mongoose.Types.ObjectId[];
+    isPinned?: boolean;
+    isEdited?: boolean;
+    poll?: {
+        question: string;
+        options: {
+            text: string;
+            votes: mongoose.Types.ObjectId[];
+        }[];
+    };
+    reactions?: {
+        emoji: string;
+        users: mongoose.Types.ObjectId[];
+    }[];
+    replyTo?: mongoose.Types.ObjectId | any;
+    isForwarded?: boolean;
+    deletedFor?: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -18,7 +36,10 @@ const messageSchema=new mongoose.Schema({
     receiverId:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
-        required:true,
+    },
+    groupId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Group",
     },
     //these below are not required true because we can send a message without an image or text or both or none of them; having required true would mean that we need to send both image and text all times
     text:{
@@ -26,7 +47,43 @@ const messageSchema=new mongoose.Schema({
     },
     image:{
         type:String,
-    }
+    },
+    mentions: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    }],
+    isPinned: {
+        type: Boolean,
+        default: false,
+    },
+    isEdited: {
+        type: Boolean,
+        default: false,
+    },
+    poll: {
+        question: String,
+        options: [{
+            text: String,
+            votes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+        }]
+    },
+    reactions: [{
+        emoji: String,
+        users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+    }],
+    replyTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message",
+        default: null
+    },
+    isForwarded: {
+        type: Boolean,
+        default: false
+    },
+    deletedFor: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }]
 },
 {timestamps:true}
 );
