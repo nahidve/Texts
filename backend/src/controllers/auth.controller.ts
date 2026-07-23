@@ -71,7 +71,12 @@ export const login = async(req: Request, res: Response) => {
 
 export const logout = (req: Request, res: Response) => {
     try{
-        res.cookie("jwt", "", {maxAge:0});
+        res.cookie("jwt", "", {
+            maxAge: 0,
+            httpOnly: true,
+            sameSite: process.env.NODE_ENV !== "development" ? "none" : "strict",
+            secure: process.env.NODE_ENV !== "development",
+        });
         res.status(200).json({message:"Logged out successfully"});
     }catch(error){
         const err=error as Error;
