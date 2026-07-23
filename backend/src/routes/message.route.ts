@@ -1,15 +1,17 @@
 import express from "express";
 import { protectRoute } from "../middleware/auth.middleware.js";
-import { getUsersForSidebar, getMessages, sendMessage, getGroupMessages, sendGroupMessage, votePoll, pinMessage, editMessage, reactToMessage, deleteMessageForMe, deleteMessageForEveryone } from "../controllers/message.controller.js";
+import { getUsersForSidebar, getMessages, sendMessage, getGroupMessages, sendGroupMessage, votePoll, pinMessage, editMessage, reactToMessage, deleteMessageForMe, deleteMessageForEveryone, toggleStarMessage, getStarredMessages, clearChat } from "../controllers/message.controller.js";
 
 const router=express.Router();
 
 router.get("/users", protectRoute, getUsersForSidebar); //get all users except yourself for the sidebar
-router.get("/:id", protectRoute, getMessages); //get messages between two users
-router.post("/send/:id", protectRoute, sendMessage); //send a message to a user
+router.get("/starred", protectRoute, getStarredMessages); //get all starred messages
 
 router.get("/group/:id", protectRoute, getGroupMessages); //get messages in a group
 router.post("/send-group/:id", protectRoute, sendGroupMessage); //send a message to a group
+router.post("/send/:id", protectRoute, sendMessage); //send a message to a user
+
+router.get("/:id", protectRoute, getMessages); //get messages between two users
 router.post("/:id/vote", protectRoute, votePoll); //vote on a poll
 
 router.put("/:id/pin", protectRoute, pinMessage); //pin or unpin a message
@@ -18,5 +20,7 @@ router.put("/:id/react", protectRoute, reactToMessage); //react to a message
 router.delete("/:id/me", protectRoute, deleteMessageForMe); //delete a message for me
 router.delete("/:id/everyone", protectRoute, deleteMessageForEveryone); //delete a message for everyone
 
+router.put("/:id/star", protectRoute, toggleStarMessage); //star or unstar a message
+router.delete("/clear/:id", protectRoute, clearChat); //clear chat
 
 export default router;

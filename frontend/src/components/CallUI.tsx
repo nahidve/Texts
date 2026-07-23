@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCallStore } from "../store/useCallStore";
 import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff } from "lucide-react";
 

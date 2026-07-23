@@ -14,14 +14,24 @@ type ChatStore = {
   isUsersLoading: boolean;
   isGroupsLoading: boolean;
   isMessagesLoading: boolean;
+  typingUsers: string[];
+  recordingAudioUsers: string[];
+
+  globalSearchResults: { users: any[], groups: any[], messages: any[] };
+  isSearchingGlobal: boolean;
+  localSearchQuery: string;
+  highlightedMessageId: string | null;
+
   getUsers: () => Promise<void>;
   getGroups: () => Promise<void>;
   getMessages: (id: string, isGroup?: boolean) => Promise<void>;
+  clearChat: (id: string, isGroup?: boolean) => Promise<void>;
   sendMessage: (messageData: any) => Promise<void>;
   subscribeToMessages: () => void;
   unsubscribeFromMessages: () => void;
   votePoll: (messageId: string, optionIndex: number) => Promise<void>;
   editingMessage: any | null;
+  replyingToMessage: any | null;
   setEditingMessage: (msg: any) => void;
   setReplyingToMessage: (msg: any) => void;
   pinMessage: (messageId: string) => Promise<void>;
@@ -30,7 +40,12 @@ type ChatStore = {
   deleteMessageForMe: (messageId: string) => Promise<void>;
   deleteMessageForEveryone: (messageId: string) => Promise<void>;
   forwardMessage: (messageData: any, recipients: { id: string, isGroup: boolean }[]) => Promise<void>;
-  typingUsers: string[];
+  toggleStarMessage: (messageId: string) => Promise<void>;
+  getStarredMessages: () => Promise<void>;
+  starredMessages: any[];
+  searchGlobal: (query: string) => Promise<void>;
+  setLocalSearchQuery: (query: string) => void;
+  setHighlightedMessageId: (id: string | null) => void;
 };
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -42,9 +57,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   editingMessage: null,
   replyingToMessage: null,
   typingUsers: [],
+  recordingAudioUsers: [],
   isUsersLoading: false,
   isGroupsLoading: false,
   isMessagesLoading: false,
+
+  globalSearchResults: { users: [], groups: [], messages: [] },
+  isSearchingGlobal: false,
+  localSearchQuery: "",
+  highlightedMessageId: null,
+  starredMessages: [],
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -83,6 +105,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
   
+  clearChat: async (id: string, isGroup = false) => {
+    try {
+      await axiosInstance.delete(`/messages/clear/${id}`, { data: { isGroup } });
+      set({ messages: [] });
+      toast.success("Chat cleared");
+    } catch (error) {
+      toast.error("Failed to clear chat");
+    }
+  },
+  
   sendMessage: async (messageData: any) => {
     const { selectedUser, selectedGroup, messages, replyingToMessage } = get();
     try {
@@ -103,6 +135,26 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
+  searchGlobal: async (query: string) => {
+    if (!query.trim()) {
+      set({ globalSearchResults: { users: [], groups: [], messages: [] } });
+      return;
+    }
+    set({ isSearchingGlobal: true });
+    try {
+      const res = await axiosInstance.get(`/search?q=${encodeURIComponent(query)}`);
+      set({ globalSearchResults: res.data });
+    } catch (error: any) {
+      console.error("Global search error:", error);
+    } finally {
+      set({ isSearchingGlobal: false });
+    }
+  },
+
+  setLocalSearchQuery: (query: string) => set({ localSearchQuery: query }),
+  
+  setHighlightedMessageId: (id: string | null) => set({ highlightedMessageId: id }),
+
   subscribeToMessages: () => {
     const { selectedUser, selectedGroup } = get();
     if (!selectedUser && !selectedGroup) return;
@@ -114,9 +166,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     socket.off("newMessage");
     socket.off("newGroupMessage");
     socket.off("pollUpdated");
+    socket.off("messageUpdated");
 
     if (selectedUser) {
-      socket.on("newMessage", (newMessage) => {
+      socket.on("newMessage", (newMessage: any) => {
         const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
         if (!isMessageSentFromSelectedUser) return;
 
@@ -127,7 +180,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
 
     if (selectedGroup) {
-      socket.on("newGroupMessage", (newMessage) => {
+      socket.on("newGroupMessage", (newMessage: any) => {
         if (newMessage.groupId !== selectedGroup._id) return;
         set({
           messages: [...get().messages, newMessage],
@@ -135,31 +188,52 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       });
     }
 
-    socket.on("pollUpdated", (updatedMessage) => {
+    socket.on("pollUpdated", (updatedMessage: any) => {
       set({
         messages: get().messages.map(m => m._id === updatedMessage._id ? updatedMessage : m)
       });
     });
 
-    socket.on("messageUpdated", (updatedMessage) => {
+    socket.on("messageUpdated", (updatedMessage: any) => {
       set({
         messages: get().messages.map(m => m._id === updatedMessage._id ? updatedMessage : m)
       });
     });
 
-    socket.on("userTyping", ({ userId, groupId }) => {
+    socket.on("userTyping", ({ userId, groupId }: any) => {
       const { selectedUser, selectedGroup } = get();
       if ((selectedGroup && groupId === selectedGroup._id) || (selectedUser && userId === selectedUser._id && !groupId)) {
         set({ typingUsers: [...new Set([...get().typingUsers, userId])] });
       }
     });
 
-    socket.on("userStoppedTyping", ({ userId }) => {
+    socket.on("userStoppedTyping", ({ userId }: any) => {
       set({ typingUsers: get().typingUsers.filter(id => id !== userId) });
     });
 
-    socket.on("messageDeleted", (messageId) => {
+    socket.on("userRecordingAudio", ({ userId, groupId }: any) => {
+      const { selectedUser, selectedGroup } = get();
+      if ((selectedGroup && groupId === selectedGroup._id) || (selectedUser && userId === selectedUser._id && !groupId)) {
+        set({ recordingAudioUsers: [...new Set([...get().recordingAudioUsers, userId])] });
+      }
+    });
+
+    socket.on("userStoppedRecordingAudio", ({ userId }: any) => {
+      set({ recordingAudioUsers: get().recordingAudioUsers.filter(id => id !== userId) });
+    });
+
+    socket.on("messageDeleted", (messageId: any) => {
       set({ messages: get().messages.filter(m => m._id !== messageId) });
+    });
+
+    socket.on("chatCleared", ({ targetId, isGroup }: any) => {
+      const { selectedUser, selectedGroup } = get();
+      const isCurrentChat = isGroup
+        ? selectedGroup?._id === targetId
+        : (selectedUser?._id === targetId || selectedUser?._id?.toString() === targetId?.toString());
+      if (isCurrentChat) {
+        set({ messages: [] });
+      }
     });
   },
 
@@ -169,13 +243,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     socket?.off("newGroupMessage");
     socket?.off("pollUpdated");
     socket?.off("messageUpdated");
-    socket?.off("userTyping");
-    socket?.off("userStoppedTyping");
-    socket?.off("messageDeleted");
+    socket.off("userTyping");
+    socket.off("userStoppedTyping");
+    socket.off("userRecordingAudio");
+    socket.off("userStoppedRecordingAudio");
+    socket.off("messageDeleted");
+    socket.off("chatCleared");
   },
 
-  setSelectedUser: (selectedUser) => set({ selectedUser, selectedGroup: null, typingUsers: [], replyingToMessage: null }),
-  setSelectedGroup: (selectedGroup) => set({ selectedGroup, selectedUser: null, typingUsers: [], replyingToMessage: null }),
+  setSelectedUser: (selectedUser) => set({ selectedUser, selectedGroup: null, typingUsers: [], recordingAudioUsers: [], replyingToMessage: null }),
+  setSelectedGroup: (selectedGroup) => set({ selectedGroup, selectedUser: null, typingUsers: [], recordingAudioUsers: [], replyingToMessage: null }),
 
   votePoll: async (messageId: string, optionIndex: number) => {
     try {
@@ -253,9 +330,37 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         const endpoint = r.isGroup ? `/messages/send-group/${r.id}` : `/messages/send/${r.id}`;
         await axiosInstance.post(endpoint, { ...messageData, isForwarded: true });
       }
-      toast.success("Message forwarded successfully");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to forward message");
+      toast.success("Messages forwarded successfully");
+    } catch (error) {
+      toast.error((error as any).response?.data?.message || "Error forwarding message");
+    }
+  },
+
+  toggleStarMessage: async (messageId: string) => {
+    try {
+      const res = await axiosInstance.put(`/messages/${messageId}/star`);
+      // Update the message in the current chat
+      const { messages } = get();
+      const updatedMessages = messages.map(msg =>
+        msg._id === messageId ? res.data : msg
+      );
+      set({ messages: updatedMessages });
+      // Always refresh the starred list so the sidebar reflects changes
+      const starredRes = await axiosInstance.get("/messages/starred");
+      set({ starredMessages: starredRes.data });
+      const isNowStarred = res.data.starredBy?.length > 0;
+      toast.success(isNowStarred ? "⭐ Message starred" : "Message unstarred");
+    } catch (error) {
+      toast.error((error as any).response?.data?.message || "Error starring message");
+    }
+  },
+
+  getStarredMessages: async () => {
+    try {
+      const res = await axiosInstance.get("/messages/starred");
+      set({ starredMessages: res.data });
+    } catch (error) {
+      toast.error("Failed to fetch starred messages");
     }
   }
 }));

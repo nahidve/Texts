@@ -89,7 +89,7 @@ export const logout = (req: Request, res: Response) => {
 export const updateProfile = async(req: Request, res: Response) => { //upload images to complete the profile
     try{
         const {profilePic}=req.body;
-        const userId=req.user?._id;
+        const userId=(req.user!._id as any);
 
         if(!profilePic) return res.status(400).json({message:"Profile picture is required"});
 
@@ -117,3 +117,144 @@ export const checkAuth = async(req: Request, res: Response) => {
         res.status(500).json({message:"Internal server error"});
     }
 }
+
+export const toggleArchive = async (req: Request, res: Response) => {
+    try {
+        const { targetId, isGroup } = req.body;
+        const userId = (req.user!._id as any);
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const isAlreadyArchived = isGroup
+            ? user.archivedGroups.some((id: any) => id.toString() === targetId.toString())
+            : user.archivedChats.some((id: any) => id.toString() === targetId.toString());
+        
+        if (isAlreadyArchived) {
+            // Unarchive
+            if (isGroup) {
+                user.archivedGroups = user.archivedGroups.filter((id: any) => id.toString() !== targetId.toString());
+            } else {
+                user.archivedChats = user.archivedChats.filter((id: any) => id.toString() !== targetId.toString());
+            }
+        } else {
+            // Archive
+            if (isGroup) {
+                user.archivedGroups.push(targetId);
+            } else {
+                user.archivedChats.push(targetId);
+            }
+        }
+        await user.save();
+        res.status(200).json({ archivedChats: user.archivedChats, archivedGroups: user.archivedGroups });
+    } catch (error: any) {
+        console.log("Error in toggleArchive controller", error.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const togglePin = async (req: Request, res: Response) => {
+    try {
+        const { targetId, isGroup } = req.body;
+        const userId = (req.user!._id as any);
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const isAlreadyPinned = isGroup
+            ? user.pinnedGroups.some((id: any) => id.toString() === targetId.toString())
+            : user.pinnedChats.some((id: any) => id.toString() === targetId.toString());
+        
+        if (isAlreadyPinned) {
+            // Unpin
+            if (isGroup) {
+                user.pinnedGroups = user.pinnedGroups.filter((id: any) => id.toString() !== targetId.toString());
+            } else {
+                user.pinnedChats = user.pinnedChats.filter((id: any) => id.toString() !== targetId.toString());
+            }
+        } else {
+            // Pin
+            if (isGroup) {
+                user.pinnedGroups.push(targetId);
+            } else {
+                user.pinnedChats.push(targetId);
+            }
+        }
+        await user.save();
+        res.status(200).json({ pinnedChats: user.pinnedChats, pinnedGroups: user.pinnedGroups });
+    } catch (error: any) {
+        console.log("Error in togglePin controller", error.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const toggleMute = async (req: Request, res: Response) => {
+    try {
+        const { targetId, isGroup, hours } = req.body;
+        const userId = (req.user!._id as any);
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const targetModel = isGroup ? "Group" : "User";
+        
+        const muteIndex = user.mutedChats.findIndex(c => c.chatId.toString() === targetId.toString() && c.chatModel === targetModel);
+        
+        if (muteIndex > -1) {
+            if (!hours) {
+                user.mutedChats.splice(muteIndex, 1);
+            } else {
+                const muteUntil = new Date();
+                muteUntil.setHours(muteUntil.getHours() + hours);
+                user.mutedChats[muteIndex].mutedUntil = muteUntil;
+            }
+        } else if (hours) {
+            const muteUntil = new Date();
+            if (hours === -1) { 
+                muteUntil.setFullYear(muteUntil.getFullYear() + 100);
+            } else {
+                muteUntil.setHours(muteUntil.getHours() + hours);
+            }
+            user.mutedChats.push({ chatId: targetId, chatModel: targetModel, mutedUntil: muteUntil });
+        }
+
+        await user.save();
+        res.status(200).json({ mutedChats: user.mutedChats });
+    } catch (error) {
+        const err = error as Error;
+        console.log("Error in toggleMute controller", err.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const setWallpaper = async (req: Request, res: Response) => {
+    try {
+        const { targetId, isGroup, url } = req.body;
+        const userId = (req.user!._id as any);
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const targetModel = isGroup ? "Group" : "User";
+        
+        const wpIndex = user.wallpapers.findIndex(c => c.chatId === targetId && c.chatModel === targetModel);
+        
+        if (!url) {
+            if (wpIndex > -1) user.wallpapers.splice(wpIndex, 1);
+        } else {
+            if (wpIndex > -1) {
+                user.wallpapers[wpIndex].url = url;
+            } else {
+                user.wallpapers.push({ chatId: targetId, chatModel: targetModel, url });
+            }
+        }
+
+        await user.save();
+        res.status(200).json({ wallpapers: user.wallpapers });
+    } catch (error) {
+        const err = error as Error;
+        console.log("Error in setWallpaper controller", err.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+

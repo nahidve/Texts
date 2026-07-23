@@ -6,6 +6,8 @@ export interface MessageType extends Document {
     groupId?: mongoose.Types.ObjectId;
     text?: string;
     image?: string;
+    audio?: string;
+    audioDuration?: number;
     mentions?: mongoose.Types.ObjectId[];
     isPinned?: boolean;
     isEdited?: boolean;
@@ -22,7 +24,11 @@ export interface MessageType extends Document {
     }[];
     replyTo?: mongoose.Types.ObjectId | any;
     isForwarded?: boolean;
+    isSilent?: boolean;
+    scheduledFor?: Date;
+    isScheduled?: boolean;
     deletedFor?: mongoose.Types.ObjectId[];
+    starredBy?: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -48,6 +54,12 @@ const messageSchema=new mongoose.Schema({
     image:{
         type:String,
     },
+    audio: {
+        type: String,
+    },
+    audioDuration: {
+        type: Number,
+    },
     mentions: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
@@ -55,6 +67,18 @@ const messageSchema=new mongoose.Schema({
     isPinned: {
         type: Boolean,
         default: false,
+    },
+    isSilent: {
+        type: Boolean,
+        default: false,
+    },
+    scheduledFor: {
+        type: Date,
+        default: null
+    },
+    isScheduled: {
+        type: Boolean,
+        default: false
     },
     isEdited: {
         type: Boolean,
@@ -81,6 +105,10 @@ const messageSchema=new mongoose.Schema({
         default: false
     },
     deletedFor: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    starredBy: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     }]

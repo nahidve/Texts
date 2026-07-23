@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useChatStore } from "../store/useChatStore";
-import { useAuthStore } from "../store/useAuthStore";
 import { X, Camera, Check } from "lucide-react";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
@@ -11,7 +10,6 @@ type CreateGroupModalProps = {
 
 const CreateGroupModal = ({ onClose }: CreateGroupModalProps) => {
   const { users, getGroups } = useChatStore();
-  const { authUser } = useAuthStore();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);

@@ -5,6 +5,12 @@ export interface UserType extends Document {
     fullName: string;
     password: string;
     profilePic?: string;
+    archivedChats: mongoose.Types.ObjectId[];
+    archivedGroups: mongoose.Types.ObjectId[];
+    pinnedChats: mongoose.Types.ObjectId[];
+    pinnedGroups: mongoose.Types.ObjectId[];
+    mutedChats: { chatId: string, chatModel: "User" | "Group", mutedUntil: Date }[];
+    wallpapers: { chatId: string, chatModel: "User" | "Group", url: string }[];
 }
 
 const userSchema = new mongoose.Schema({
@@ -26,6 +32,32 @@ const userSchema = new mongoose.Schema({
         type:String,
         default:""
     },
+    archivedChats: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    archivedGroups: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Group"
+    }],
+    pinnedChats: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    pinnedGroups: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Group"
+    }],
+    mutedChats: [{
+        chatId: { type: String, required: true },
+        chatModel: { type: String, enum: ['User', 'Group'], required: true },
+        mutedUntil: { type: Date, required: true }
+    }],
+    wallpapers: [{
+        chatId: { type: String, required: true },
+        chatModel: { type: String, enum: ['User', 'Group'], required: true },
+        url: { type: String, required: true }
+    }],
 }, {timestamps:true}
 );
 

@@ -6,8 +6,9 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
-import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2 } from "lucide-react";
+import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Mic, Star, Clock, BellOff } from "lucide-react";
 import ForwardModal from "./ForwardModal";
+import VoiceMessage from "./VoiceMessage";
 
 const ChatContainer = () => {
   const {
@@ -25,13 +26,19 @@ const ChatContainer = () => {
     reactToMessage,
     deleteMessageForMe,
     deleteMessageForEveryone,
-    typingUsers
+    typingUsers,
+    recordingAudioUsers,
+    localSearchQuery,
+    highlightedMessageId,
+    setHighlightedMessageId,
+    toggleStarMessage
   } = useChatStore();
 
   const [forwardingMessage, setForwardingMessage] = useState<any>(null);
 
   const { authUser } = useAuthStore();
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
     if (selectedGroup) {
@@ -44,6 +51,28 @@ const ChatContainer = () => {
 
     return () => unsubscribeFromMessages();
   }, [selectedUser?._id, selectedGroup?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+
+  useEffect(() => {
+    if (messageEndRef.current && messages && !highlightedMessageId) {
+      setTimeout(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [messages, highlightedMessageId]);
+
+  useEffect(() => {
+    if (highlightedMessageId && messageRefs.current[highlightedMessageId]) {
+      setTimeout(() => {
+        messageRefs.current[highlightedMessageId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Optional: clear the highlight after a few seconds so it doesn't get stuck
+        setTimeout(() => setHighlightedMessageId(null), 3000);
+      }, 500);
+    }
+  }, [highlightedMessageId]);
+
+  const filteredMessages = localSearchQuery
+    ? messages.filter((m) => m.text?.toLowerCase().includes(localSearchQuery.toLowerCase()))
+    : messages;
 
   const getSenderInfo = (senderId: string) => {
     if (selectedUser && senderId === selectedUser._id) {
@@ -60,6 +89,10 @@ const ChatContainer = () => {
   const canPin = !selectedGroup || selectedGroup.permissions?.memberCanPinMessages || isAdminOrOwner;
   
   const pinnedMessages = messages.filter(m => m.isPinned);
+  
+  const targetId = selectedGroup?._id || selectedUser?._id;
+  const isGroup = !!selectedGroup;
+  const currentWallpaper = authUser?.wallpapers?.find((w: any) => w.chatId === targetId && w.chatModel === (isGroup ? 'Group' : 'User'))?.url;
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -91,15 +124,24 @@ const ChatContainer = () => {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {messages?.map((message) => {
+      <div 
+        className={`flex-1 overflow-y-auto p-4 space-y-6 relative ${currentWallpaper ? 'bg-cover bg-center bg-no-repeat bg-fixed' : 'bg-base-100'}`}
+        style={currentWallpaper ? { backgroundImage: `url(${currentWallpaper})` } : {}}
+      >
+        {/* Dark overlay for better text readability on wallpapers */}
+        {currentWallpaper && <div className="absolute inset-0 bg-base-100/40 z-0 pointer-events-none" />}
+        
+        <div className="relative z-10 space-y-6">
+        {filteredMessages.map((message) => {
           const isMe = message.senderId === authUser?._id;
           const senderInfo = getSenderInfo(message.senderId);
+          const isHighlighted = message._id === highlightedMessageId;
           return (
             <div
               key={message._id}
+              ref={(el) => { messageRefs.current[message._id] = el; }}
               id={`msg-${message._id}`}
-              className={`w-full flex ${isMe ? "justify-end" : "justify-start"} group relative`}
+              className={`w-full flex ${isMe ? "justify-end" : "justify-start"} group relative ${isHighlighted ? 'animate-pulse bg-primary/10 rounded-xl p-2' : ''}`}
             >
               <div className={`flex items-end gap-3 max-w-[75%]`}>
                 {!isMe && (
@@ -119,9 +161,9 @@ const ChatContainer = () => {
                     <span className="text-xs font-semibold text-primary pl-1">{senderInfo.name}</span>
                   )}
                   <div
-                    className={`px-4 py-2 rounded-xl border shadow-sm break-words whitespace-pre-wrap relative ${
-                      isMe ? "rounded-br-none" : "rounded-bl-none"
-                    } ${message.isPinned ? "ring-2 ring-primary/50" : ""}`}
+                    className={`rounded-xl shadow-sm break-words whitespace-pre-wrap relative ${
+                      isMe ? "bg-primary text-primary-content rounded-br-none" : "bg-base-100 border border-base-300 rounded-bl-none"
+                    } ${message.isPinned ? "ring-2 ring-primary/50" : ""} ${message.audio && !message.text ? "p-0 shadow-none border-none bg-transparent" : "px-4 py-2"}`}
                   >
                     {/* Hover Actions */}
                     <div className={`absolute -top-3 ${isMe ? "-left-20" : "-right-20"} hidden group-hover:flex items-center gap-0.5 bg-base-200 border border-base-300 rounded-lg shadow-md p-1 z-10`}>
@@ -147,6 +189,9 @@ const ChatContainer = () => {
                       </button>
                       <button onClick={() => setForwardingMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-green-500 transition-colors" title="Forward">
                         <Forward size={14} />
+                      </button>
+                      <button onClick={() => toggleStarMessage(message._id)} className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-yellow-500 transition-colors" title="Star message">
+                        <Star size={14} className={authUser && message.starredBy?.includes(authUser._id) ? 'fill-yellow-500 text-yellow-500' : ''} />
                       </button>
                       <div className="dropdown dropdown-top dropdown-end">
                         <div tabIndex={0} role="button" className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-red-500 transition-colors" title="Delete">
@@ -175,6 +220,11 @@ const ChatContainer = () => {
                         <Pin size={10} className="fill-primary" /> Pinned
                       </div>
                     )}
+                    {authUser && message.starredBy?.includes(authUser._id) && (
+                      <div className="flex items-center gap-1 text-yellow-500 text-[10px] uppercase font-bold mb-1 opacity-90">
+                        <Star size={10} className="fill-yellow-500" /> Starred
+                      </div>
+                    )}
                     {message.isForwarded && (
                       <div className="flex items-center gap-1 text-[10px] text-base-content/60 italic mb-1">
                         <Forward size={10} /> Forwarded
@@ -198,6 +248,15 @@ const ChatContainer = () => {
                         alt="Attachment"
                         className="max-w-[200px] rounded-md mb-2 border"
                       />
+                    )}
+                    {message.audio && (
+                      <div className="mb-2">
+                        <VoiceMessage 
+                          audioUrl={message.audio}
+                          duration={message.audioDuration}
+                          isMe={isMe}
+                        />
+                      </div>
                     )}
                     {message.text && (
                       <p className="text-sm">
@@ -244,9 +303,11 @@ const ChatContainer = () => {
                     )}
                   </div>
   
-                  <span className="text-xs opacity-60 mt-0.5">
+                  <span className="flex items-center gap-1 text-xs opacity-60 mt-0.5">
+                    {message.isScheduled && <span title="Scheduled Message"><Clock size={10} className="text-primary" /></span>}
+                    {message.isSilent && <span title="Sent Silently"><BellOff size={10} className="text-zinc-400" /></span>}
                     {formatMessageTime(message.createdAt)}
-                    {message.isEdited && <span className="ml-1 italic">(edited)</span>}
+                    {message.isEdited && <span className="italic">(edited)</span>}
                   </span>
 
                   {message.reactions && message.reactions.length > 0 && (
@@ -267,22 +328,11 @@ const ChatContainer = () => {
                     </div>
                   )}
                 </div>
-  
-                {isMe && (
-                  <div className="avatar shrink-0 self-end">
-                    <div className="w-10 h-10 rounded-xl border shadow-sm overflow-hidden">
-                      <img
-                        src={authUser.profilePic || "/avatar.png"}
-                        alt="profile"
-                        className="object-cover"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           );
         })}
+        </div>
 
         {/* Typing Indicator */}
         {typingUsers?.length > 0 && (
@@ -290,13 +340,31 @@ const ChatContainer = () => {
             <div className="flex items-center gap-3 bg-base-200/50 text-base-content/70 px-4 py-2 rounded-xl rounded-bl-none text-sm animate-pulse w-fit border border-base-300">
               <span className="loading loading-dots loading-sm text-primary"></span>
               <span className="italic font-medium">
-                {typingUsers.map(id => {
+                {typingUsers.map((id: string) => {
                   if (selectedGroup) {
                     const member = selectedGroup.members.find((m: any) => m.user?._id === id);
                     return member ? member.user?.fullName : "Someone";
                   }
                   return selectedUser?.fullName || "Someone";
                 }).join(", ")} {typingUsers.length > 1 ? "are" : "is"} typing...
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Recording Audio Indicator */}
+        {recordingAudioUsers?.length > 0 && (
+          <div className="w-full flex justify-start mt-2">
+            <div className="flex items-center gap-3 bg-base-200/50 text-base-content/70 px-4 py-2 rounded-xl rounded-bl-none text-sm animate-pulse w-fit border border-base-300">
+              <Mic className="size-4 text-primary animate-bounce" />
+              <span className="italic font-medium">
+                {recordingAudioUsers.map((id: string) => {
+                  if (selectedGroup) {
+                    const member = selectedGroup.members.find((m: any) => m.user?._id === id);
+                    return member ? member.user?.fullName : "Someone";
+                  }
+                  return selectedUser?.fullName || "Someone";
+                }).join(", ")} {recordingAudioUsers.length > 1 ? "are" : "is"} recording audio...
               </span>
             </div>
           </div>

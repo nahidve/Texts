@@ -21,7 +21,10 @@ type AuthStore = {
   socket: any;
   connectSocket: () => void;
   disconnectSocket: () => void;
-
+  toggleArchive: (targetId: string, isGroup: boolean) => Promise<void>;
+  togglePin: (targetId: string, isGroup: boolean) => Promise<void>;
+  toggleMute: (targetId: string, isGroup: boolean, hours?: number) => Promise<void>;
+  setWallpaper: (targetId: string, isGroup: boolean, url: string) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthStore>((set,get) => ({
@@ -117,13 +120,61 @@ export const useAuthStore = create<AuthStore>((set,get) => ({
       },
     });
     socket.connect();
-    set({ socket }); //Save the socket instance in the store
+    set({ socket: socket });
 
     socket.on("getOnlineUsers", (userIds: any) => {
       set({ onlineUsers: userIds });
     });
   },
   disconnectSocket: () => {
-    if(get().socket?.connected) get().socket.disconnect()
+    if (get().socket?.connected) get().socket.disconnect();
   },
+
+  toggleArchive: async (targetId: string, isGroup: boolean) => {
+    try {
+      const res = await axiosInstance.post("/auth/archive", { targetId, isGroup });
+      const authUser = get().authUser;
+      set({ authUser: { ...authUser, archivedChats: res.data.archivedChats, archivedGroups: res.data.archivedGroups } });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to toggle archive");
+    }
+  },
+
+  togglePin: async (targetId: string, isGroup: boolean) => {
+    try {
+      const res = await axiosInstance.post("/auth/pin", { targetId, isGroup });
+      const authUser = get().authUser;
+      if (authUser) {
+        set({ authUser: { ...authUser, pinnedChats: res.data.pinnedChats, pinnedGroups: res.data.pinnedGroups } });
+      }
+    } catch (error) {
+      toast.error("Failed to pin/unpin");
+    }
+  },
+
+  toggleMute: async (targetId: string, isGroup: boolean, hours?: number) => {
+    try {
+      const res = await axiosInstance.post("/auth/mute", { targetId, isGroup, hours });
+      const authUser = get().authUser;
+      if (authUser) {
+        set({ authUser: { ...authUser, mutedChats: res.data.mutedChats } });
+      }
+      toast.success(hours ? `Muted for ${hours === -1 ? 'forever' : hours + ' hours'}` : 'Unmuted');
+    } catch (error) {
+      toast.error("Failed to mute/unmute");
+    }
+  },
+
+  setWallpaper: async (targetId: string, isGroup: boolean, url: string) => {
+    try {
+      const res = await axiosInstance.post("/auth/wallpaper", { targetId, isGroup, url });
+      const authUser = get().authUser;
+      if (authUser) {
+        set({ authUser: { ...authUser, wallpapers: res.data.wallpapers } });
+      }
+      toast.success(url ? 'Wallpaper set successfully' : 'Wallpaper removed');
+    } catch (error) {
+      toast.error("Failed to set wallpaper");
+    }
+  }
 }));

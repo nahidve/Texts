@@ -10,7 +10,7 @@ import { io } from "../lib/socket.js";
 export const getUsersForSidebar=async(req:Request, res:Response)=>{
     //get all users except yourself
     try{
-        const loggedInUserId=req.user?._id;
+        const loggedInUserId=(req.user!._id as any);
         const filteredUsers=await User.find({_id:{$ne:loggedInUserId}}).select("-password"); //this will return all users except the logged in user
 
         res.status(200).json(filteredUsers); //send the users to the frontend
@@ -26,7 +26,11 @@ export const getUsersForSidebar=async(req:Request, res:Response)=>{
 export const getMessages=async(req:Request, res:Response)=>{
     try{
         const {id:userToChatId}=req.params; //this is the id of the user to chat with
-        const myId=req.user?._id; //this is the id of the logged in user
+        const myId=(req.user!._id as any); //this is the id of the logged in user
+
+        if (userToChatId === "undefined" || !userToChatId) {
+            return res.status(200).json([]);
+        }
 
         const messages=await Message.find({ //this will return all messages between the two users
             $or:[ 
@@ -47,12 +51,12 @@ export const getMessages=async(req:Request, res:Response)=>{
 //send a message to a user
 export const sendMessage = async (req: Request, res: Response) => {
     try {
-      const { text, image, replyTo, isForwarded } = req.body;
+      const { text, image, audio, audioDuration, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
       const { id: receiverId } = req.params;
-      const senderId = req.user?._id;
+      const senderId = (req.user!._id as any);
   
-      if (!text && !image) {
-        return res.status(400).json({ message: "Text or image is required" });
+      if (!text && !image && !audio) {
+        return res.status(400).json({ message: "Text, image, or audio is required" });
       }
   
       let imageUrl;
@@ -60,27 +64,53 @@ export const sendMessage = async (req: Request, res: Response) => {
         const uploadResponse = await cloudinary.uploader.upload(image);
         imageUrl = uploadResponse.secure_url;
       }
+
+      let audioUrl;
+      if (audio) {
+        const uploadResponse = await cloudinary.uploader.upload(audio, { resource_type: "video" });
+        audioUrl = uploadResponse.secure_url;
+      }
   
       const newMessage = new Message({
         senderId,
         receiverId,
         text,
         image: imageUrl,
+        audio: audioUrl,
+        audioDuration,
         replyTo: replyTo || null,
         isForwarded: isForwarded || false,
+        isSilent: isSilent || false,
+        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+        isScheduled: !!scheduledFor
       });
   
       await newMessage.save();
       await newMessage.populate("replyTo", "text image senderId isForwarded");
   
-      // Emit to receiver and sender
       const receiverSocketId = getReceiverSocketId(receiverId as string);
       const senderSocketId = getReceiverSocketId(senderId as string);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("newMessage", newMessage);
-      }
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("newMessage", newMessage);
+      
+      if (!scheduledFor) {
+        if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", newMessage);
+        if (senderSocketId) io.to(senderSocketId).emit("newMessage", newMessage);
+      } else {
+        // Just emit to sender to show it's scheduled
+        if (senderSocketId) io.to(senderSocketId).emit("newMessage", newMessage);
+        
+        const delay = new Date(scheduledFor).getTime() - Date.now();
+        if (delay > 0) {
+            setTimeout(async () => {
+                const msg = await Message.findById(newMessage._id).populate("replyTo", "text image senderId isForwarded");
+                if (msg) {
+                    msg.isScheduled = false;
+                    await msg.save();
+                    if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", msg);
+                    // Also notify sender it was sent
+                    if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", msg);
+                }
+            }, delay);
+        }
       }
   
       res.status(201).json(newMessage);
@@ -105,12 +135,12 @@ export const getGroupMessages = async (req: Request, res: Response) => {
 
 export const sendGroupMessage = async (req: Request, res: Response) => {
     try {
-        const { text, image, mentions, poll, replyTo, isForwarded } = req.body;
+        const { text, image, audio, audioDuration, mentions, poll, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
         const { id: groupId } = req.params;
-        const senderId = req.user?._id;
+        const senderId = (req.user!._id as any);
 
-        if (!text && !image && !poll) {
-            return res.status(400).json({ message: "Text, image, or poll is required" });
+        if (!text && !image && !poll && !audio) {
+            return res.status(400).json({ message: "Text, image, poll, or audio is required" });
         }
 
         let imageUrl;
@@ -121,22 +151,54 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
             imageUrl = image;
         }
 
+        let audioUrl;
+        if (audio && !audio.startsWith("http")) {
+            const uploadResponse = await cloudinary.uploader.upload(audio, { resource_type: "video" });
+            audioUrl = uploadResponse.secure_url;
+        } else if (audio) {
+            audioUrl = audio;
+        }
+
         const newMessage = new Message({
             senderId,
             groupId,
             text,
             image: imageUrl,
+            audio: audioUrl,
+            audioDuration,
             mentions: mentions || [],
             poll,
             replyTo: replyTo || null,
             isForwarded: isForwarded || false,
+            isSilent: isSilent || false,
+            scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+            isScheduled: !!scheduledFor
         });
 
         await newMessage.save();
         await newMessage.populate("replyTo", "text image senderId isForwarded");
+        await newMessage.populate("senderId", "fullName profilePic");
 
-        // Broadcast to the group room
-        io.to(`group_${groupId}`).emit("newGroupMessage", newMessage);
+        if (!scheduledFor) {
+            io.to(`group_${groupId}`).emit("newGroupMessage", newMessage);
+        } else {
+            const senderSocketId = getReceiverSocketId(senderId as string);
+            if (senderSocketId) io.to(senderSocketId).emit("newGroupMessage", newMessage);
+            
+            const delay = new Date(scheduledFor).getTime() - Date.now();
+            if (delay > 0) {
+                setTimeout(async () => {
+                    const msg = await Message.findById(newMessage._id).populate("replyTo", "text image senderId isForwarded").populate("senderId", "fullName profilePic");
+                    if (msg) {
+                        msg.isScheduled = false;
+                        await msg.save();
+                        io.to(`group_${groupId}`).emit("newGroupMessage", msg);
+                        // Also notify sender
+                        if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", msg);
+                    }
+                }, delay);
+            }
+        }
 
         res.status(201).json(newMessage);
     } catch (error) {
@@ -150,7 +212,7 @@ export const votePoll = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const { optionIndex } = req.body;
-        const userId = req.user?._id;
+        const userId = (req.user!._id as any);
 
         const message = await Message.findById(messageId);
         if (!message || !message.poll) {
@@ -189,7 +251,7 @@ export const votePoll = async (req: Request, res: Response) => {
 export const pinMessage = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
-        const userId = req.user?._id;
+        const userId = (req.user!._id as any);
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -226,7 +288,7 @@ export const editMessage = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const { text } = req.body;
-        const userId = req.user?._id;
+        const userId = (req.user!._id as any);
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -260,7 +322,7 @@ export const reactToMessage = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
         const { emoji } = req.body;
-        const userId = req.user?._id;
+        const userId = (req.user!._id as any);
 
         if (!emoji) return res.status(400).json({ message: "Emoji is required" });
 
@@ -312,7 +374,7 @@ export const reactToMessage = async (req: Request, res: Response) => {
 export const deleteMessageForMe = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
-        const userId = req.user?._id;
+        const userId = (req.user!._id as any);
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -335,7 +397,7 @@ export const deleteMessageForMe = async (req: Request, res: Response) => {
 export const deleteMessageForEveryone = async (req: Request, res: Response) => {
     try {
         const { id: messageId } = req.params;
-        const userId = req.user?._id;
+        const userId = (req.user!._id as any);
 
         const message = await Message.findById(messageId);
         if (!message) return res.status(404).json({ message: "Message not found" });
@@ -360,6 +422,89 @@ export const deleteMessageForEveryone = async (req: Request, res: Response) => {
     } catch (error) {
         const err = error as Error;
         console.log("Error in deleteMessageForEveryone controller", err.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const toggleStarMessage = async (req: Request, res: Response) => {
+    try {
+        const { id: messageId } = req.params;
+        const userId = (req.user!._id as any);
+
+        const message = await Message.findById(messageId);
+        if (!message) return res.status(404).json({ message: "Message not found" });
+
+        if (!message.starredBy) {
+            message.starredBy = [];
+        }
+
+        const isStarred = message.starredBy.some((id: any) => id.toString() === userId.toString());
+        if (isStarred) {
+            message.starredBy = message.starredBy.filter((id: any) => id.toString() !== userId.toString());
+        } else {
+            message.starredBy.push(userId);
+        }
+
+        await message.save();
+        await message.populate("replyTo", "text image senderId isForwarded");
+        await message.populate("senderId", "fullName profilePic");
+
+        res.status(200).json(message);
+    } catch (error) {
+        const err = error as Error;
+        console.log("Error in toggleStarMessage controller", err.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const getStarredMessages = async (req: Request, res: Response) => {
+    try {
+        const userId = (req.user!._id as any);
+        const messages = await Message.find({ starredBy: userId }).populate("senderId", "fullName profilePic").populate("groupId", "name avatar");
+        res.status(200).json(messages);
+    } catch (error) {
+        const err = error as Error;
+        console.log("Error in getStarredMessages controller", err.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const clearChat = async (req: Request, res: Response) => {
+    try {
+        const { id: targetId } = req.params;
+        const { isGroup } = req.body;
+        const myId = (req.user!._id as any);
+
+        if (isGroup) {
+            // Group messages are stored with groupId field
+            await Message.deleteMany({ groupId: targetId });
+        } else {
+            // Direct messages between two users
+            await Message.deleteMany({
+                $or: [
+                    { senderId: myId, receiverId: targetId },
+                    { senderId: targetId, receiverId: myId }
+                ]
+            });
+        }
+
+        // Emit socket event so both sides clear in real time
+        const { io, getReceiverSocketId } = await import("../lib/socket.js");
+        const senderSocketId = getReceiverSocketId(myId.toString());
+        if (senderSocketId) io.to(senderSocketId).emit("chatCleared", { targetId, isGroup });
+
+        if (!isGroup) {
+            const receiverSocketId = getReceiverSocketId(targetId);
+            if (receiverSocketId) io.to(receiverSocketId).emit("chatCleared", { targetId: myId, isGroup });
+        } else {
+            // Emit to all group members
+            io.to(`group_${targetId}`).emit("chatCleared", { targetId, isGroup });
+        }
+
+        res.status(200).json({ message: "Chat cleared successfully" });
+    } catch (error) {
+        const err = error as Error;
+        console.error("Error in clearChat", err.message);
         res.status(500).json({ message: "Internal server error" });
     }
 };

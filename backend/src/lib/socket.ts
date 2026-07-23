@@ -68,6 +68,19 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("recordingAudio", ({ receiverId, groupId }) => {
+        if (typeof userId === "string") {
+            if (groupId) {
+                socket.to(`group_${groupId}`).emit("userRecordingAudio", { userId, groupId });
+            } else if (receiverId) {
+                const receiverSocketId = getReceiverSocketId(receiverId);
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("userRecordingAudio", { userId });
+                }
+            }
+        }
+    });
+
     // --- WebRTC & Calling Signaling ---
 
     // 1. Initiate Call
@@ -96,6 +109,19 @@ io.on("connection", (socket) => {
                 const receiverSocketId = getReceiverSocketId(receiverId);
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("userStoppedTyping", { userId });
+                }
+            }
+        }
+    });
+
+    socket.on("stopRecordingAudio", ({ receiverId, groupId }) => {
+        if (typeof userId === "string") {
+            if (groupId) {
+                socket.to(`group_${groupId}`).emit("userStoppedRecordingAudio", { userId, groupId });
+            } else if (receiverId) {
+                const receiverSocketId = getReceiverSocketId(receiverId);
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("userStoppedRecordingAudio", { userId });
                 }
             }
         }

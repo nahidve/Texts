@@ -8,7 +8,10 @@ export class WebRTCManager {
   public onRemoteTrack?: (stream: MediaStream) => void;
   public onConnectionStateChange?: (state: RTCPeerConnectionState) => void;
 
-  constructor(private config?: RTCConfiguration) {
+  private config?: RTCConfiguration;
+
+  constructor(config?: RTCConfiguration) {
+    this.config = config;
     // Default STUN server
     if (!this.config) {
       this.config = {
