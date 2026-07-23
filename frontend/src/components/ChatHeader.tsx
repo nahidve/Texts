@@ -39,7 +39,7 @@ const ChatHeader = () => {
               <div className="flex items-center gap-2">
                 <div className={`size-2 rounded-full ${isOnline ? "bg-success" : "bg-base-300"}`} />
                 <p className="text-sm font-medium text-base-content/70">
-                  {isOnline ? "Online" : "Offline"}
+                  {isOnline ? "Online" : selectedUser.lastSeen ? `last seen at ${new Date(selectedUser.lastSeen).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` : "Offline"}
                 </p>
               </div>
             ) : (

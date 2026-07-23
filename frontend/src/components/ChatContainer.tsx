@@ -6,7 +6,7 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
-import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2 } from "lucide-react";
+import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Phone, Video } from "lucide-react";
 import ForwardModal from "./ForwardModal";
 
 const ChatContainer = () => {
@@ -221,8 +221,8 @@ const ChatContainer = () => {
                                 </a>
                               );
                           }
-                          const mentionedMember = selectedGroup?.members.find((m: any) => `@${m.user.fullName}` === part);
-                          if (mentionedMember && message.mentions?.includes(mentionedMember.user._id)) {
+                          const mentionedMember = selectedGroup?.members.find((m: any) => m.user && `@${m.user.fullName}` === part);
+                          if (mentionedMember && message.mentions?.includes(mentionedMember.user?._id)) {
                             return <span key={i} className="text-primary font-bold bg-primary/10 px-1 rounded">{part}</span>;
                           }
                           return <span key={i}>{part}</span>;
@@ -257,6 +257,28 @@ const ChatContainer = () => {
                           {message.poll.options.reduce((sum: number, o: any) => sum + o.votes.length, 0)} votes
                         </div>
                       </div>
+                    )}
+
+                    {message.callEvent && (
+                       <div className="flex items-center gap-3 p-3 bg-base-300/50 rounded-xl border border-base-300 w-full min-w-[200px] mt-2 shadow-sm">
+                          <div className={`p-2 rounded-full ${message.callEvent.status === 'missed' || message.callEvent.status === 'rejected' || message.callEvent.status === 'cancelled' ? 'bg-error/20 text-error' : 'bg-primary/20 text-primary'}`}>
+                             {message.callEvent.callType === 'video' ? <Video className="size-5" /> : <Phone className="size-5" />}
+                          </div>
+                          <div className="flex flex-col">
+                             <span className="text-sm font-bold capitalize">
+                                {message.callEvent.status === 'missed' ? 'Missed Call' : 
+                                 message.callEvent.status === 'cancelled' ? 'Cancelled Call' : 
+                                 message.callEvent.status === 'ended' ? 'Call Ended' : 
+                                 message.callEvent.status === 'rejected' ? 'Declined Call' :
+                                 message.callEvent.status === 'busy' ? 'User Busy' : 'Call'}
+                             </span>
+                             {message.callEvent.duration > 0 ? (
+                                <span className="text-xs text-base-content/70 font-mono mt-0.5">{message.callEvent.duration}s</span>
+                             ) : (
+                                <span className="text-xs text-base-content/70 font-medium mt-0.5">{formatMessageTime(message.createdAt)}</span>
+                             )}
+                          </div>
+                       </div>
                     )}
                   </div>
   

@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 
 type CallState = "idle" | "calling" | "ringing" | "incoming" | "connected";
 
+let callTimeout: any = null;
+
 interface CallStore {
   callState: CallState;
   callType: "audio" | "video" | null;
@@ -62,6 +64,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
     socket.off("CALL_CANCELLED");
     socket.off("CALL_ENDED");
     socket.off("USER_BUSY");
+    socket.off("USER_OFFLINE");
     socket.off("WEBRTC_SIGNAL");
     socket.off("GROUP_CALL_INCOMING");
     socket.off("GROUP_USER_JOINED");
@@ -79,6 +82,13 @@ export const useCallStore = create<CallStore>((set, get) => ({
       }
       set({ callState: "incoming", remoteUser: { _id: callerId, ...callerInfo }, callType });
       get().playRingtone("incoming");
+
+      if (callTimeout) clearTimeout(callTimeout);
+      callTimeout = setTimeout(() => {
+         if (get().callState === "incoming") {
+             get().rejectCall();
+         }
+      }, 30000);
     });
 
     socket.on("CALL_ACCEPTED", async ({ receiverId }: any) => {
@@ -103,6 +113,11 @@ export const useCallStore = create<CallStore>((set, get) => ({
 
     socket.on("USER_BUSY", () => {
       toast.error("User is busy on another call");
+      get().cleanup();
+    });
+    
+    socket.on("USER_OFFLINE", () => {
+      toast.error("User is offline");
       get().cleanup();
     });
 
@@ -206,6 +221,13 @@ export const useCallStore = create<CallStore>((set, get) => ({
             callType: type 
           });
           get().playRingtone("outgoing");
+          
+          if (callTimeout) clearTimeout(callTimeout);
+          callTimeout = setTimeout(() => {
+             if (get().callState === "calling" || get().callState === "ringing") {
+                 get().cancelCall();
+             }
+          }, 30000);
       }
     } catch (error) {
       toast.error("Could not access camera/microphone");
@@ -285,6 +307,10 @@ export const useCallStore = create<CallStore>((set, get) => ({
   },
 
   cleanup: () => {
+    if (callTimeout) {
+        clearTimeout(callTimeout);
+        callTimeout = null;
+    }
     get().stopRingtone();
     webrtcManager.endCall();
     set({

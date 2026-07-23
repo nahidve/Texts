@@ -22,6 +22,11 @@ export interface MessageType extends Document {
     }[];
     replyTo?: mongoose.Types.ObjectId | any;
     isForwarded?: boolean;
+    callEvent?: {
+        status: string;
+        callType: string;
+        duration: number;
+    };
     deletedFor?: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
@@ -79,6 +84,11 @@ const messageSchema=new mongoose.Schema({
     isForwarded: {
         type: Boolean,
         default: false
+    },
+    callEvent: {
+        status: String, // e.g., "missed", "ended", "rejected", "cancelled", "busy"
+        callType: String, // "audio" or "video"
+        duration: { type: Number, default: 0 }
     },
     deletedFor: [{
         type: mongoose.Schema.Types.ObjectId,

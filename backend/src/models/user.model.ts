@@ -5,6 +5,7 @@ export interface UserType extends Document {
     fullName: string;
     password: string;
     profilePic?: string;
+    lastSeen?: Date;
 }
 
 const userSchema = new mongoose.Schema({
@@ -26,6 +27,10 @@ const userSchema = new mongoose.Schema({
         type:String,
         default:""
     },
+    lastSeen: {
+        type: Date,
+        default: Date.now
+    }
 }, {timestamps:true}
 );
 

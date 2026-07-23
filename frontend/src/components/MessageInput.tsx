@@ -65,7 +65,7 @@ const MessageInput = () => {
         finalMentions = selectedGroup.members.map((m: any) => m.user._id);
       } else {
         selectedGroup.members.forEach((m: any) => {
-          if (text.includes(`@${m.user.fullName}`)) {
+          if (m.user && text.includes(`@${m.user.fullName}`)) {
             finalMentions.push(m.user._id);
           }
         });
@@ -139,7 +139,7 @@ const MessageInput = () => {
   };
 
   const filteredMembers = selectedGroup
-    ? selectedGroup.members.filter((m: any) => m.user.fullName.toLowerCase().includes(mentionQuery))
+    ? selectedGroup.members.filter((m: any) => m.user?.fullName?.toLowerCase().includes(mentionQuery))
     : [];
 
   return (
@@ -179,12 +179,12 @@ const MessageInput = () => {
           </div>
           {filteredMembers.map((m: any) => (
             <div
-              key={m.user._id}
+              key={m.user?._id || Math.random()}
               className="px-4 py-2 hover:bg-base-200 cursor-pointer flex items-center gap-3 transition-colors"
-              onClick={() => insertMention(m.user.fullName)}
+              onClick={() => m.user && insertMention(m.user.fullName)}
             >
-              <img src={m.user.profilePic || "/avatar.png"} alt="" className="size-8 rounded-full object-cover" />
-              <span className="font-medium text-sm">{m.user.fullName}</span>
+              <img src={m.user?.profilePic || "/avatar.png"} alt="" className="size-8 rounded-full object-cover" />
+              <span className="font-medium text-sm">{m.user?.fullName || "Unknown"}</span>
             </div>
           ))}
         </div>

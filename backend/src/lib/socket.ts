@@ -3,6 +3,8 @@ import http from "http";
 import express from "express";
 import Group from "../models/group.model.js";
 import Call from "../models/call.model.js";
+import User from "../models/user.model.js";
+import Message from "../models/message.model.js";
 
 
 
@@ -46,10 +48,13 @@ io.on("connection", (socket) => {
     //io.emit() is used to send a message to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
         console.log("A user disconnected", socket.id);
         if (typeof userId === "string") {
           delete userSocketMap[userId];
+          try {
+              await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
+          } catch (e) { console.error("Error updating lastSeen", e); }
         }
         io.emit("getOnlineUsers", Object.keys(userSocketMap));
     });
@@ -74,15 +79,15 @@ io.on("connection", (socket) => {
 
     // --- WebRTC & Calling Signaling ---
 
-    // 1. Initiate Call
     socket.on("CALL_INITIATE", async ({ receiverId, callerInfo, callType }) => {
+        const callerId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         const receiverSocketId = getReceiverSocketId(receiverId);
+        
         if (receiverSocketId) {
             if (busyUsers.has(receiverId)) {
                 // User is busy
                 io.to(socket.id).emit("USER_BUSY", { receiverId });
-                // Save missed/busy call
-                const callerId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
+                // Save busy call
                 await new Call({
                     callerId,
                     receiverId,
@@ -91,14 +96,43 @@ io.on("connection", (socket) => {
                     duration: 0,
                     participants: [callerId, receiverId]
                 }).save();
+                
+                const msg = await new Message({
+                    senderId: callerId,
+                    receiverId,
+                    callEvent: { status: "busy", callType, duration: 0 }
+                }).save();
+                io.to(socket.id).emit("newMessage", msg);
+                io.to(receiverSocketId).emit("newMessage", msg);
+                
             } else {
                 // Forward the call request
                 io.to(receiverSocketId).emit("CALL_INCOMING", { 
-                    callerId: typeof userId === "string" ? userId : socket.handshake.query.userId, 
+                    callerId, 
                     callerInfo,
                     callType 
                 });
             }
+        } else {
+            // User is offline
+            io.to(socket.id).emit("USER_OFFLINE", { receiverId });
+            
+            await new Call({
+                callerId,
+                receiverId,
+                type: callType,
+                status: "missed",
+                duration: 0,
+                participants: [callerId, receiverId]
+            }).save();
+            
+            const msg = await new Message({
+                senderId: callerId,
+                receiverId,
+                callEvent: { status: "missed", callType, duration: 0 }
+            }).save();
+            
+            io.to(socket.id).emit("newMessage", msg);
         }
     });
 
@@ -141,9 +175,18 @@ io.on("connection", (socket) => {
             participants: [callerId, receiverId]
         }).save();
 
+        const msg = await new Message({
+            senderId: callerId,
+            receiverId,
+            callEvent: { status: "rejected", callType: callType || "audio", duration: 0 }
+        }).save();
+
         if (callerSocketId) {
             io.to(callerSocketId).emit("CALL_REJECTED", { receiverId });
+            io.to(callerSocketId).emit("newMessage", msg);
         }
+        const receiverSocketId = getReceiverSocketId(receiverId);
+        if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", msg);
     });
 
     // 4. Cancel Call (Caller cancels before answer)
@@ -160,9 +203,18 @@ io.on("connection", (socket) => {
             participants: [callerId, receiverId]
         }).save();
 
+        const msg = await new Message({
+            senderId: callerId,
+            receiverId,
+            callEvent: { status: "missed", callType: callType || "audio", duration: 0 }
+        }).save();
+
         if (receiverSocketId) {
             io.to(receiverSocketId).emit("CALL_CANCELLED", { callerId });
+            io.to(receiverSocketId).emit("newMessage", msg);
         }
+        const callerSocketId = getReceiverSocketId(callerId);
+        if (callerSocketId) io.to(callerSocketId).emit("newMessage", msg);
     });
 
     // 5. End Call
@@ -183,9 +235,18 @@ io.on("connection", (socket) => {
             participants: [currentUserId, targetId]
         }).save();
 
+        const msg = await new Message({
+            senderId: currentUserId,
+            receiverId: targetId,
+            callEvent: { status: "ended", callType: callType || "audio", duration: duration || 0 }
+        }).save();
+
         if (targetSocketId) {
             io.to(targetSocketId).emit("CALL_ENDED", { enderId: currentUserId });
+            io.to(targetSocketId).emit("newMessage", msg);
         }
+        const senderSocketId = getReceiverSocketId(currentUserId);
+        if (senderSocketId) io.to(senderSocketId).emit("newMessage", msg);
     });
 
     // 6. WebRTC Signaling (SDP Offer/Answer & ICE Candidates)
@@ -248,6 +309,14 @@ io.on("connection", (socket) => {
                 duration: duration || 0,
                 participants: [currentUserId]
             }).save();
+            
+            const msg = await new Message({
+                senderId: currentUserId,
+                groupId: groupId,
+                callEvent: { status: "ended", callType: callType || "audio", duration: duration || 0 }
+            }).save();
+            socket.to(`group_${groupId}`).emit("newGroupMessage", msg);
+            io.to(socket.id).emit("newGroupMessage", msg);
 
             // If empty, cleanup
             if (activeGroupCalls.get(groupId)!.size === 0) {
