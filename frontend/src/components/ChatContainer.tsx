@@ -113,7 +113,7 @@ const ChatContainer = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-auto">
+    <div className="flex-1 flex flex-col overflow-auto h-full relative">
       <ChatHeader />
 
       {pinnedMessages.length > 0 && (
@@ -133,7 +133,7 @@ const ChatContainer = () => {
         {/* Dark overlay for better text readability on wallpapers */}
         {currentWallpaper && <div className="absolute inset-0 bg-base-100/40 z-0 pointer-events-none" />}
 
-        <div className="relative z-10 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 relative z-10 custom-scrollbar">
           {filteredMessages.map((message) => {
             const isMe = message.senderId === authUser?._id;
             const senderInfo = getSenderInfo(message.senderId);
