@@ -128,7 +128,7 @@ export const reactToStory = async (req: Request, res: Response) => {
     }
 
     // Check if user already reacted
-    const existingReaction = story.reactions.find((r: any) => r.userId.toString() === userId.toString());
+    const reactionIndex = story.reactions.findIndex((r: any) => r.userId.toString() === userId.toString());
 
     if (reactionIndex > -1) {
       story.reactions[reactionIndex].emoji = emoji;
