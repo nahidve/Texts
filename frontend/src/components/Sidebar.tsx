@@ -3,10 +3,9 @@ import { createPortal } from "react-dom";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users, UsersIcon, PlusCircle, Search, Pin, Archive, Star, BellOff, MoreVertical, Trash2, PhoneCall } from "lucide-react";
+import { PlusCircle, Search, Pin, Archive, Star, BellOff, MoreVertical, Trash2 } from "lucide-react";
 import CreateGroupModal from "./CreateGroupModal";
 import CallHistory from "./CallHistory";
-import StoryFeed from "./StoryFeed";
 import StoryArchiveModal from "./StoryArchiveModal";
 
 const Sidebar = () => {
