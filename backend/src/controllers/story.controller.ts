@@ -14,7 +14,7 @@ export const uploadStory = async (req: Request, res: Response) => {
     }
 
     // Upload to cloudinary
-    const uploadResponse = await cloudinary.uploader.upload(media, {
+    const uploadResponse = await cloudinary.uploader.upload_large(media, {
       resource_type: mediaType === "video" ? "video" : "image",
     });
 
@@ -24,7 +24,7 @@ export const uploadStory = async (req: Request, res: Response) => {
 
     const newStory = new Story({
       userId,
-      mediaUrl: uploadResponse.secure_url,
+      mediaUrl: (uploadResponse as any).secure_url,
       mediaType,
       expiresAt,
     });
@@ -39,8 +39,13 @@ export const uploadStory = async (req: Request, res: Response) => {
 
     res.status(201).json(newStory);
   } catch (error) {
-    console.error("Error in uploadStory:", error);
-    res.status(500).json({ message: "Internal server error" });
+    const err = error as any;
+    console.error("Error in uploadStory:", err.message);
+    if (err.message && err.message.includes("File size too large")) {
+      res.status(413).json({ message: "File size too large. The limit is 10MB for images and 100MB for videos." });
+    } else {
+      res.status(500).json({ message: "Internal server error" });
+    }
   }
 };
 

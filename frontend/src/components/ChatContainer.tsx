@@ -127,8 +127,8 @@ const ChatContainer = () => {
       )}
 
       <div
-        className={`flex-1 overflow-y-auto p-4 space-y-6 relative ${currentWallpaper ? 'bg-cover bg-center bg-no-repeat bg-fixed' : 'bg-base-100'}`}
-        style={currentWallpaper ? { backgroundImage: `url(${currentWallpaper})` } : {}}
+        className={`flex-1 overflow-y-auto p-4 space-y-6 relative ${currentWallpaper ? 'bg-cover bg-center bg-no-repeat' : 'telegram-chat-bg bg-repeat'}`}
+        style={currentWallpaper ? { backgroundImage: `url('${currentWallpaper}')` } : {}}
       >
         {/* Dark overlay for better text readability on wallpapers */}
         {currentWallpaper && <div className="absolute inset-0 bg-base-100/40 z-0 pointer-events-none" />}
@@ -165,14 +165,14 @@ const ChatContainer = () => {
                     <div
                       className={`px-4 py-2.5 rounded-2xl border shadow-sm break-words whitespace-pre-wrap relative text-[15px] ${
                         isMe 
-                          ? "rounded-br-sm bg-gradient-to-br from-fuchsia-500 to-cyan-500 text-white border-transparent shadow-cyan-500/20" 
+                          ? "rounded-br-sm bg-gradient-to-br from-primary to-secondary text-primary-content border-transparent shadow-primary/20" 
                           : "rounded-bl-sm glass-panel text-base-content border-base-300"
-                      } ${message.isPinned ? "ring-2 ring-yellow-400" : ""} ${message.audio && !message.text ? "p-0 shadow-none border-none bg-transparent" : ""}`}
+                      } ${message.isPinned ? "ring-2 ring-warning" : ""} ${message.audio && !message.text ? "p-0 shadow-none border-none bg-transparent" : ""}`}
                     >
                       {/* Hover Actions */}
                       <div className={`absolute -top-3 ${isMe ? "-left-20" : "-right-20"} hidden group-hover:flex items-center gap-0.5 bg-base-200 border border-base-300 rounded-lg shadow-md p-1 z-10`}>
                         <div className="dropdown dropdown-top dropdown-end">
-                          <div tabIndex={0} role="button" className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-warning transition-colors" title="React">
+                          <div tabIndex={0} role="button" className="p-1.5 hover:bg-base-300 rounded-md text-gray-500 hover:text-warning transition-colors" title="React">
                             <SmilePlus size={14} />
                           </div>
                           <ul tabIndex={0} className="dropdown-content z-[1] p-1 shadow bg-base-100 rounded-box w-max flex gap-1 mb-1 border border-base-300">
@@ -184,22 +184,22 @@ const ChatContainer = () => {
                           </ul>
                         </div>
                         {canPin && (
-                          <button onClick={() => pinMessage(message._id)} className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-primary transition-colors" title={message.isPinned ? "Unpin" : "Pin"}>
+                          <button onClick={() => pinMessage(message._id)} className="p-1.5 hover:bg-base-300 rounded-md text-gray-500 hover:text-primary transition-colors" title={message.isPinned ? "Unpin" : "Pin"}>
                             <Pin size={14} className={message.isPinned ? "text-primary" : ""} />
                           </button>
                         )}
-                        <button onClick={() => setReplyingToMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-info transition-colors" title="Reply">
+                        <button onClick={() => setReplyingToMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-gray-500 hover:text-info transition-colors" title="Reply">
                           <Reply size={14} />
                         </button>
-                        <button onClick={() => setForwardingMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-success transition-colors" title="Forward">
+                        <button onClick={() => setForwardingMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-gray-500 hover:text-success transition-colors" title="Forward">
                           <Forward size={14} />
                         </button>
-                        <button onClick={() => toggleStarMessage(message._id)} className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-warning transition-colors" title="Star message">
+                        <button onClick={() => toggleStarMessage(message._id)} className="p-1.5 hover:bg-base-300 rounded-md text-gray-500 hover:text-warning transition-colors" title="Star message">
                           <Star size={14} className={message.isStarred ? "text-warning fill-warning" : ""} />
                         </button>
                         <div className="dropdown dropdown-top dropdown-end">
                           {isMe && (
-                            <div tabIndex={0} role="button" className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-error transition-colors" title="Delete">
+                            <div tabIndex={0} role="button" className="p-1.5 hover:bg-base-300 rounded-md text-gray-500 hover:text-error transition-colors" title="Delete">
                               <Trash2 size={14} />
                             </div>
                           )}

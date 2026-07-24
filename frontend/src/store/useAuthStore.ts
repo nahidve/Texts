@@ -172,14 +172,21 @@ export const useAuthStore = create<AuthStore>((set,get) => ({
 
   setWallpaper: async (targetId: string, isGroup: boolean, url: string) => {
     try {
-      const res = await axiosInstance.post("/auth/wallpaper", { targetId, isGroup, url });
+      const uploadPromise = axiosInstance.post("/auth/wallpaper", { targetId, isGroup, url });
+      
+      toast.promise(uploadPromise, {
+        loading: url ? 'Uploading wallpaper...' : 'Removing wallpaper...',
+        success: url ? 'Wallpaper set successfully' : 'Wallpaper removed',
+        error: 'Failed to set wallpaper'
+      });
+
+      const res = await uploadPromise;
       const authUser = get().authUser;
       if (authUser) {
         set({ authUser: { ...authUser, wallpapers: res.data.wallpapers } });
       }
-      toast.success(url ? 'Wallpaper set successfully' : 'Wallpaper removed');
     } catch (error) {
-      toast.error("Failed to set wallpaper");
+      console.log(error);
     }
   }
 }));

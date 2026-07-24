@@ -60,20 +60,20 @@ export const sendMessage = async (req: Request, res: Response) => {
 
         let imageUrl;
         if (image) {
-            const uploadResponse = await cloudinary.uploader.upload(image);
-            imageUrl = uploadResponse.secure_url;
+            const uploadResponse = await cloudinary.uploader.upload_large(image);
+            imageUrl = (uploadResponse as any).secure_url;
         }
 
         let audioUrl;
         if (audio) {
-            const uploadResponse = await cloudinary.uploader.upload(audio, { resource_type: "video" });
-            audioUrl = uploadResponse.secure_url;
+            const uploadResponse = await cloudinary.uploader.upload_large(audio, { resource_type: "video" });
+            audioUrl = (uploadResponse as any).secure_url;
         }
 
         let fileUrl;
         if (file) {
-            const uploadResponse = await cloudinary.uploader.upload(file, { resource_type: "auto" });
-            fileUrl = uploadResponse.secure_url;
+            const uploadResponse = await cloudinary.uploader.upload_large(file, { resource_type: "auto" });
+            fileUrl = (uploadResponse as any).secure_url;
         }
 
         const newMessage = new Message({
@@ -125,9 +125,13 @@ export const sendMessage = async (req: Request, res: Response) => {
 
         res.status(201).json(newMessage);
     } catch (error) {
-        const err = error as Error;
+        const err = error as any;
         console.log("Error in sendMessage controller", err.message);
-        res.status(500).json({ message: "Internal server error" });
+        if (err.message && err.message.includes("File size too large")) {
+            res.status(413).json({ message: "File size too large. The limit is 10MB for images and 100MB for videos." });
+        } else {
+            res.status(500).json({ message: "Internal server error" });
+        }
     }
 };
 
@@ -155,24 +159,24 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
 
         let imageUrl;
         if (image && !image.startsWith("http")) {
-            const uploadResponse = await cloudinary.uploader.upload(image);
-            imageUrl = uploadResponse.secure_url;
+            const uploadResponse = await cloudinary.uploader.upload_large(image);
+            imageUrl = (uploadResponse as any).secure_url;
         } else if (image) {
             imageUrl = image;
         }
 
         let audioUrl;
         if (audio && !audio.startsWith("http")) {
-            const uploadResponse = await cloudinary.uploader.upload(audio, { resource_type: "video" });
-            audioUrl = uploadResponse.secure_url;
+            const uploadResponse = await cloudinary.uploader.upload_large(audio, { resource_type: "video" });
+            audioUrl = (uploadResponse as any).secure_url;
         } else if (audio) {
             audioUrl = audio;
         }
 
         let fileUrl;
         if (file && !file.startsWith("http")) {
-            const uploadResponse = await cloudinary.uploader.upload(file, { resource_type: "auto" });
-            fileUrl = uploadResponse.secure_url;
+            const uploadResponse = await cloudinary.uploader.upload_large(file, { resource_type: "auto" });
+            fileUrl = (uploadResponse as any).secure_url;
         } else if (file) {
             fileUrl = file;
         }
@@ -222,9 +226,13 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
 
         res.status(201).json(newMessage);
     } catch (error) {
-        const err = error as Error;
+        const err = error as any;
         console.log("Error in sendGroupMessage controller", err.message);
-        res.status(500).json({ message: "Internal server error" });
+        if (err.message && err.message.includes("File size too large")) {
+            res.status(413).json({ message: "File size too large. The limit is 10MB for images and 100MB for videos." });
+        } else {
+            res.status(500).json({ message: "Internal server error" });
+        }
     }
 };
 

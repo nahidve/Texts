@@ -60,6 +60,10 @@ const MessageInput = () => {
       toast.error("Please select an image file");
       return;
     }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image size must be less than 10MB");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -74,8 +78,8 @@ const MessageInput = () => {
   };
 
   const processFile = (file: File) => {
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error("File size must be less than 20MB");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be less than 10MB");
       return;
     }
     const reader = new FileReader();
@@ -114,6 +118,10 @@ const MessageInput = () => {
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       if (file.type.startsWith("image/")) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error("Image size must be less than 10MB");
+          return;
+        }
         const reader = new FileReader();
         reader.onloadend = () => {
           setImagePreview(reader.result as string);

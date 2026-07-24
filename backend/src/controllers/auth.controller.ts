@@ -198,6 +198,8 @@ export const toggleMute = async (req: Request, res: Response) => {
 
         const targetModel = isGroup ? "Group" : "User";
         
+        if (!user.mutedChats) user.mutedChats = [];
+        
         const muteIndex = user.mutedChats.findIndex(c => c.chatId.toString() === targetId.toString() && c.chatModel === targetModel);
         
         if (muteIndex > -1) {
@@ -237,16 +239,19 @@ export const setWallpaper = async (req: Request, res: Response) => {
 
         const targetModel = isGroup ? "Group" : "User";
         
-        const wpIndex = user.wallpapers.findIndex(c => c.chatId === targetId && c.chatModel === targetModel);
+        if (!user.wallpapers) user.wallpapers = [];
         
-        if (!url) {
-            if (wpIndex > -1) user.wallpapers.splice(wpIndex, 1);
-        } else {
-            if (wpIndex > -1) {
-                user.wallpapers[wpIndex].url = url;
-            } else {
-                user.wallpapers.push({ chatId: targetId, chatModel: targetModel, url });
+        // Remove ALL existing entries for this chat to clean up any duplicates from previous bugs
+        user.wallpapers = user.wallpapers.filter(c => !(c.chatId?.toString() === targetId.toString() && c.chatModel === targetModel));
+        
+        if (url) {
+            let finalUrl = url;
+            if (url.startsWith('data:image')) {
+                const uploadResponse = await cloudinary.uploader.upload(url);
+                finalUrl = uploadResponse.secure_url;
             }
+            // Add the new wallpaper
+            user.wallpapers.push({ chatId: targetId, chatModel: targetModel, url: finalUrl });
         }
 
         await user.save();

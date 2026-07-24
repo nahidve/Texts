@@ -109,8 +109,6 @@ const Sidebar = () => {
 
   return (
     <aside className="h-full w-20 lg:w-80 flex flex-col transition-all duration-200 relative glass-panel border-r border-base-300 overflow-hidden">
-      {/* Playful accent bar */}
-      <div className="absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b from-primary via-secondary to-accent z-20" />
 
       <div className="relative z-10 border-b border-base-300 w-full p-4 flex flex-col gap-2 bg-base-100/50">
         <div className="flex overflow-x-auto hide-scrollbar gap-1 bg-base-200/50 rounded-xl p-1 shadow-sm border border-base-300">
@@ -120,7 +118,7 @@ const Sidebar = () => {
             title="Contacts"
           >
             <Users className="size-4" />
-            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'users' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Contacts</span>
+            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Contacts</span>
           </button>
           <button
             onClick={() => setActiveTab("groups")}
@@ -128,7 +126,7 @@ const Sidebar = () => {
             title="Groups"
           >
             <UsersIcon className="size-4" />
-            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'groups' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Groups</span>
+            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Groups</span>
           </button>
           <button
             onClick={() => setActiveTab("archived")}
@@ -136,7 +134,7 @@ const Sidebar = () => {
             title="Archived"
           >
             <Archive className="size-4" />
-            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'archived' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Archived</span>
+            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Archived</span>
           </button>
           <button
             onClick={() => setActiveTab("starred")}
@@ -144,15 +142,15 @@ const Sidebar = () => {
             title="Starred"
           >
             <Star className="size-4" />
-            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'starred' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Starred</span>
+            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Starred</span>
           </button>
           <button
             onClick={() => setActiveTab("calls")}
             className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'calls' ? 'bg-base-100 text-success shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
             title="Calls"
           >
-            <PhoneCall className="size-5" />
-            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'calls' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Calls</span>
+            <PhoneCall className="size-4" />
+            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Calls</span>
           </button>
         </div>
 
@@ -170,26 +168,26 @@ const Sidebar = () => {
         )}
 
         {activeTab === 'users' ? (
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <label className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-xl bg-base-200/50 hover:bg-base-200 transition-premium border border-base-300 shadow-sm">
-                <input
-                  type="checkbox"
-                  checked={showOnlineOnly}
-                  onChange={(e) => setShowOnlineOnly(e.target.checked)}
-                  className="checkbox checkbox-primary checkbox-xs rounded"
-                />
-                <span className="text-xs text-base-content font-bold tracking-wide">Online only</span>
-              </label>
-              <span className="text-xs text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">{Math.max(0, onlineUsers.length - 1)}</span>
-            </div>
+          <div className="mt-3 flex items-center justify-between gap-2 px-1">
+            <label className="cursor-pointer flex items-center gap-2 group">
+              <input
+                type="checkbox"
+                checked={showOnlineOnly}
+                onChange={(e) => setShowOnlineOnly(e.target.checked)}
+                className="checkbox checkbox-primary checkbox-xs rounded"
+              />
+              <span className="text-xs text-base-content/80 group-hover:text-base-content transition-colors font-medium">Online only</span>
+              {onlineUsers.length > 1 && (
+                <span className="text-[10px] text-primary font-bold bg-primary/10 px-1.5 py-0 rounded-full">{Math.max(0, onlineUsers.length - 1)}</span>
+              )}
+            </label>
 
             <button
               onClick={() => setShowStoryArchive(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 transition-all text-indigo-600 text-xs font-bold border border-indigo-200 shadow-sm"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-base-200 hover:bg-base-300 transition-colors text-base-content/70 text-xs font-medium"
             >
-              <Archive className="size-4" />
-              <span className="hidden lg:block">Story Archive</span>
+              <Archive className="size-3.5" />
+              <span className="hidden lg:block">Archive</span>
             </button>
           </div>
         ) : activeTab === 'groups' ? (
@@ -298,12 +296,12 @@ const Sidebar = () => {
                 <div
                   key={user._id}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-premium
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150
                     group relative cursor-pointer border
                     ${isMenuOpen ? 'z-50' : 'z-0'}
                     ${selectedUser?._id === user._id
-                      ? "bg-base-200 border-primary shadow-md scale-[1.02]"
-                      : "bg-transparent border-transparent hover:bg-base-200/50 hover:border-base-300 hover:shadow-sm"}
+                      ? "bg-base-200 shadow-md gradient-border-active"
+                      : "bg-base-100/50 border-base-300 hover:bg-base-200 shadow-sm"}
                   `}
                   onClick={() => setSelectedUser(user)}
                 >
@@ -311,25 +309,25 @@ const Sidebar = () => {
                     <img
                       src={user.profilePic || "/avatar.png"}
                       alt={user.fullName}
-                      className={`size-12 object-cover rounded-full border-2 ${selectedUser?._id === user._id ? "border-primary" : "border-base-300 shadow-sm"}`}
+                      className="size-12 object-cover rounded-full"
                     />
                     {onlineUsers.includes(user._id) && (
-                      <span className="absolute bottom-0 right-0 size-3.5 bg-success border-2 border-base-100 rounded-full" />
+                      <span className={`absolute bottom-0 right-0 size-3.5 bg-success border-2 rounded-full ${selectedUser?._id === user._id ? 'border-primary' : 'border-base-100'}`} />
                     )}
                   </div>
                   <div className="hidden lg:block text-left min-w-0 flex-1">
-                    <div className="font-semibold truncate text-base-content/90 text-base drop-shadow flex items-center gap-2">
+                    <div className={`font-medium truncate text-sm flex items-center gap-2 text-base-content`}>
                       {user.fullName}
-                      {isPinned && <Pin className="size-3 text-base-content/50" />}
+                      {isPinned && <Pin className="size-3 opacity-70" />}
                       {authUser?.mutedChats?.some((c: any) => c.chatId === user._id && c.chatModel === 'User' && new Date(c.mutedUntil) > new Date()) && (
-                        <BellOff className="size-3 text-white/50" />
+                        <BellOff className="size-3 opacity-70" />
                       )}
                     </div>
                     <div className="text-xs text-base-content/50">
                       {onlineUsers.includes(user._id) ? (
-                        <span className="text-success font-bold animate-pulse">● Online</span>
+                        <span>Online</span>
                       ) : (
-                        <span className="text-base-content/40">Offline</span>
+                        <span>Offline</span>
                       )}
                     </div>
                   </div>
@@ -337,13 +335,13 @@ const Sidebar = () => {
                   <div className="relative hidden lg:block flex-shrink-0" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={(e) => handleChatMenuClick(e, user._id)}
-                      className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
+                      className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-base-300 text-base-content/60"
                       title="Chat options"
                     >
-                      <MoreVertical className="size-4 text-white/60" />
+                      <MoreVertical className="size-4" />
                     </button>
                     {isMenuOpen && (
-                      <div className="absolute right-0 top-full mt-1 w-44 bg-base-100 shadow-2xl rounded-xl border border-base-300 py-1 z-50 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                      <div className="absolute right-0 top-full mt-1 w-44 bg-base-100 text-base-content shadow-2xl rounded-xl border border-base-300 py-1 z-50 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePin(user._id, false); setOpenMenuId(null); }}
                           className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
@@ -374,9 +372,6 @@ const Sidebar = () => {
                       </div>
                     )}
                   </div>
-                  {selectedUser?._id === user._id && (
-                    <span className="absolute -left-2 -top-2 w-4 h-4 bg-gradient-to-br from-primary to-accent rounded-full blur-sm opacity-60 animate-pulse" />
-                  )}
                 </div>
               );
             })}
@@ -394,12 +389,12 @@ const Sidebar = () => {
                 <div
                   key={group._id}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-premium
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150
                     group relative cursor-pointer border
                     ${isMenuOpen ? 'z-50' : 'z-0'}
                     ${selectedGroup?._id === group._id
-                      ? "bg-base-200 border-secondary shadow-md scale-[1.02]"
-                      : "bg-transparent border-transparent hover:bg-base-200/50 hover:border-base-300 hover:shadow-sm"}
+                      ? "bg-base-200 shadow-md gradient-border-active"
+                      : "bg-base-100/50 border-base-300 hover:bg-base-200 shadow-sm"}
                   `}
                   onClick={() => setSelectedGroup(group)}
                 >
@@ -407,18 +402,18 @@ const Sidebar = () => {
                     <img
                       src={group.avatar || "/avatar.png"}
                       alt={group.name}
-                      className={`size-12 object-cover rounded-full border-2 ${selectedGroup?._id === group._id ? "border-secondary" : "border-base-300 shadow-sm"}`}
+                      className="size-12 object-cover rounded-full"
                     />
                   </div>
                   <div className="hidden lg:block text-left min-w-0 flex-1">
-                    <div className="font-semibold truncate text-base-content/90 text-base drop-shadow flex items-center gap-2">
+                    <div className={`font-medium truncate text-sm flex items-center gap-2 text-base-content`}>
                       {group.name}
-                      {isPinned && <Pin className="size-3 text-base-content/50" />}
+                      {isPinned && <Pin className="size-3 opacity-70" />}
                       {authUser?.mutedChats?.some((c: any) => c.chatId === group._id && c.chatModel === 'Group' && new Date(c.mutedUntil) > new Date()) && (
-                        <BellOff className="size-3 text-white/50" />
+                        <BellOff className="size-3 opacity-70" />
                       )}
                     </div>
-                    <div className="text-xs text-base-content/50 truncate">
+                    <div className="text-xs truncate text-base-content/50">
                       {group.members.length} members
                     </div>
                   </div>
@@ -426,13 +421,13 @@ const Sidebar = () => {
                   <div className="relative hidden lg:block flex-shrink-0" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={(e) => handleChatMenuClick(e, group._id)}
-                      className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
+                      className="p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-base-300 text-base-content/60"
                       title="Chat options"
                     >
-                      <MoreVertical className="size-4 text-white/60" />
+                      <MoreVertical className="size-4" />
                     </button>
                     {isMenuOpen && (
-                      <div className="absolute right-0 top-full mt-1 w-44 bg-base-100 shadow-2xl rounded-xl border border-base-300 py-1 z-50 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                      <div className="absolute right-0 top-full mt-1 w-44 bg-base-100 text-base-content shadow-2xl rounded-xl border border-base-300 py-1 z-50 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePin(group._id, true); setOpenMenuId(null); }}
                           className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
@@ -463,9 +458,6 @@ const Sidebar = () => {
                       </div>
                     )}
                   </div>
-                  {selectedGroup?._id === group._id && (
-                    <span className="absolute -left-2 -top-2 w-4 h-4 bg-gradient-to-br from-primary to-accent rounded-full blur-sm opacity-60 animate-pulse" />
-                  )}
                 </div>
               );
             })}
@@ -583,6 +575,28 @@ const Sidebar = () => {
         }
         .animate-fade-in-up {
           animation: fade-in-up 1s cubic-bezier(.4,0,.2,1) both;
+        }
+        .gradient-border-active {
+          border-color: transparent !important;
+        }
+        .gradient-border-active::after {
+          content: "";
+          position: absolute;
+          inset: -1px;
+          border-radius: 0.8rem;
+          padding: 2.5px;
+          background: linear-gradient(45deg, #f472b6, #8b5cf6, #3b82f6, #2dd4bf);
+          background-size: 200% 200%;
+          animation: gradient-shift 3s ease infinite;
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+        }
+        @keyframes gradient-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
         /* Custom scrollbar for user list */
         .custom-scrollbar::-webkit-scrollbar {

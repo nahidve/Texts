@@ -3,14 +3,17 @@ import { Search, X, Settings, Phone, Video, MoreVertical, BellOff, Image, Archiv
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import GroupSettingsModal from "./GroupSettingsModal";
+import UserProfileModal from "./UserProfileModal";
 import { useCallStore } from "../store/useCallStore";
 
 const ChatHeader = () => {
   const { selectedUser, setSelectedUser, selectedGroup, setSelectedGroup, localSearchQuery, setLocalSearchQuery, clearChat } = useChatStore();
   const { onlineUsers, authUser, toggleMute, setWallpaper, toggleArchive } = useAuthStore();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showMuteOptions, setShowMuteOptions] = useState(false);
 
   const { initiateCall } = useCallStore();
   const isOnline = selectedUser && onlineUsers.includes(selectedUser._id);
@@ -21,9 +24,13 @@ const ChatHeader = () => {
   const isArchived = isGroup ? authUser?.archivedGroups?.includes(targetId) : authUser?.archivedChats?.includes(targetId);
 
   return (
-    <div className="p-4 border-b border-base-300 bg-base-100/80 backdrop-blur-sm shadow-sm">
+    <div className="p-4 border-b border-base-300 bg-base-100/80 backdrop-blur-sm shadow-sm relative z-50">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div 
+          className="flex items-center gap-4 cursor-pointer hover:bg-base-200/50 p-1.5 -ml-1.5 rounded-2xl transition-colors"
+          onClick={() => isGroup ? setIsSettingsOpen(true) : setIsUserProfileOpen(true)}
+          title="View profile"
+        >
           <div className="avatar relative">
             <div className="size-12 rounded-2xl border-2 border-base-300 shadow-md overflow-hidden bg-base-200">
               <img
@@ -119,7 +126,10 @@ const ChatHeader = () => {
           {/* More Options Dropdown */}
           <div className="relative">
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              onClick={() => {
+                setIsDropdownOpen(!isDropdownOpen);
+                if (!isDropdownOpen) setShowMuteOptions(false);
+              }}
               className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group"
             >
               <MoreVertical className="size-5 text-base-content/70 group-hover:text-base-content" />
@@ -129,37 +139,82 @@ const ChatHeader = () => {
                 className="absolute right-0 top-full mt-2 w-48 bg-base-100 shadow-2xl rounded-xl border border-base-300 py-2 z-50 animate-in fade-in zoom-in-95"
                 onClick={() => setIsDropdownOpen(false)}
               >
-                <button
-                  onClick={() => toggleMute(targetId!, isGroup, isMuted ? 0 : 8)}
-                  className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
-                >
-                  <BellOff className="size-4" />
-                  {isMuted ? 'Unmute' : 'Mute for 8 hours'}
-                </button>
-                <button
-                  onClick={() => toggleMute(targetId!, isGroup, isMuted ? 0 : 24 * 7)}
-                  className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
-                >
-                  <BellOff className="size-4" />
-                  {isMuted ? 'Unmute' : 'Mute for 1 week'}
-                </button>
-                <button
-                  onClick={() => toggleMute(targetId!, isGroup, isMuted ? 0 : -1)}
-                  className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
-                >
-                  <BellOff className="size-4 text-red-500" />
-                  {isMuted ? 'Unmute' : 'Mute forever'}
-                </button>
+                {isMuted ? (
+                  <button
+                    onClick={() => toggleMute(targetId!, isGroup, 0)}
+                    className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
+                  >
+                    <BellOff className="size-4" />
+                    Unmute
+                  </button>
+                ) : showMuteOptions ? (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <div className="px-4 py-2 text-xs font-semibold text-base-content/50 uppercase tracking-wider flex items-center gap-2">
+                      <button onClick={() => setShowMuteOptions(false)} className="hover:text-base-content">
+                        ← Back
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => { toggleMute(targetId!, isGroup, 8); setIsDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2 pl-8"
+                    >
+                      For 8 hours
+                    </button>
+                    <button
+                      onClick={() => { toggleMute(targetId!, isGroup, 24 * 7); setIsDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2 pl-8"
+                    >
+                      For 1 week
+                    </button>
+                    <button
+                      onClick={() => { toggleMute(targetId!, isGroup, -1); setIsDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2 pl-8 text-red-500"
+                    >
+                      Forever
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMuteOptions(true); }}
+                    className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2 justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BellOff className="size-4" />
+                      Mute chat...
+                    </div>
+                    <span className="text-base-content/50 opacity-50">›</span>
+                  </button>
+                )}
                 <div className="border-t border-base-300 my-1"></div>
-                <button
-                  onClick={() => {
-                    const url = prompt("Enter wallpaper URL (or leave blank to remove):");
-                    if (url !== null) setWallpaper(targetId!, isGroup, url);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
+                <label
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2 cursor-pointer"
                 >
                   <Image className="size-4" />
                   Set Wallpaper
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (!e.target.files || e.target.files.length === 0) return;
+                      const file = e.target.files[0];
+                      const reader = new FileReader();
+                      reader.readAsDataURL(file);
+                      reader.onload = () => {
+                        setWallpaper(targetId!, isGroup, reader.result as string);
+                        setIsDropdownOpen(false);
+                      };
+                      e.target.value = ''; // Reset input so same file can be selected again
+                    }}
+                  />
+                </label>
+                <button
+                  onClick={() => setWallpaper(targetId!, isGroup, "")}
+                  className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2 text-base-content/60"
+                >
+                  <Image className="size-4 opacity-50" />
+                  Remove Wallpaper
                 </button>
                 <div className="border-t border-base-300 my-1"></div>
                 <button
@@ -209,7 +264,8 @@ const ChatHeader = () => {
         </div>
       )}
 
-      {isSettingsOpen && <GroupSettingsModal onClose={() => setIsSettingsOpen(false)} />}
+      {isSettingsOpen && selectedGroup && <GroupSettingsModal onClose={() => setIsSettingsOpen(false)} />}
+      {isUserProfileOpen && selectedUser && <UserProfileModal user={selectedUser} isOnline={isOnline ?? false} onClose={() => setIsUserProfileOpen(false)} />}
     </div>
   );
 };
