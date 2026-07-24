@@ -15,6 +15,8 @@ const ChatHeader = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showMuteOptions, setShowMuteOptions] = useState(false);
+  const [isUploadingWallpaper, setIsUploadingWallpaper] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { initiateCall } = useCallStore();
   const isOnline = selectedUser && onlineUsers.includes(selectedUser._id);
