@@ -13,7 +13,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:5173", "https://texts-frontend-swart.vercel.app"],
+        origin: ["http://localhost:5173", "https://AIGramX-frontend-swart.vercel.app"],
     },
 });
 
@@ -40,19 +40,19 @@ io.on("connection", (socket) => {
 
     const userId = socket.handshake.query.userId;
     if (typeof userId === "string") {
-      socket.join(userId);
-      
-      if (!userSockets.has(userId)) {
-          userSockets.set(userId, new Set());
-      }
-      userSockets.get(userId)!.add(socket.id);
-      
-      // Join all group rooms the user is a member of
-      Group.find({ "members.user": userId }).then(groups => {
-          groups.forEach(group => {
-              socket.join(`group_${group._id}`);
-          });
-      }).catch(err => console.error("Error joining group rooms:", err));
+        socket.join(userId);
+
+        if (!userSockets.has(userId)) {
+            userSockets.set(userId, new Set());
+        }
+        userSockets.get(userId)!.add(socket.id);
+
+        // Join all group rooms the user is a member of
+        Group.find({ "members.user": userId }).then(groups => {
+            groups.forEach(group => {
+                socket.join(`group_${group._id}`);
+            });
+        }).catch(err => console.error("Error joining group rooms:", err));
     }
 
     //io.emit() is used to send a message to all connected clients
@@ -61,16 +61,16 @@ io.on("connection", (socket) => {
     socket.on("disconnect", async () => {
         console.log("A user disconnected", socket.id);
         if (typeof userId === "string") {
-          const sockets = userSockets.get(userId);
-          if (sockets) {
-              sockets.delete(socket.id);
-              if (sockets.size === 0) {
-                  userSockets.delete(userId);
-                  try {
-                      await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
-                  } catch (e) { console.error("Error updating lastSeen", e); }
-              }
-          }
+            const sockets = userSockets.get(userId);
+            if (sockets) {
+                sockets.delete(socket.id);
+                if (sockets.size === 0) {
+                    userSockets.delete(userId);
+                    try {
+                        await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
+                    } catch (e) { console.error("Error updating lastSeen", e); }
+                }
+            }
         }
         io.emit("getOnlineUsers", Array.from(userSockets.keys()));
     });
@@ -107,7 +107,7 @@ io.on("connection", (socket) => {
 
     socket.on("CALL_INITIATE", async ({ receiverId, callerInfo, callType }) => {
         const callerId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
-        
+
         if (userSockets.has(receiverId)) {
             if (busyUsers.has(receiverId)) {
                 // User is busy
@@ -121,7 +121,7 @@ io.on("connection", (socket) => {
                     duration: 0,
                     participants: [callerId, receiverId]
                 }).save();
-                
+
                 const msg = await new Message({
                     senderId: callerId,
                     receiverId,
@@ -129,19 +129,19 @@ io.on("connection", (socket) => {
                 }).save();
                 io.to(socket.id).emit("newMessage", msg);
                 io.to(receiverId).emit("newMessage", msg);
-                
+
             } else {
                 // Forward the call request
-                io.to(receiverId).emit("CALL_INCOMING", { 
-                    callerId, 
+                io.to(receiverId).emit("CALL_INCOMING", {
+                    callerId,
                     callerInfo,
-                    callType 
+                    callType
                 });
             }
         } else {
             // User is offline
             io.to(socket.id).emit("USER_OFFLINE", { receiverId });
-            
+
             await new Call({
                 callerId,
                 receiverId,
@@ -150,13 +150,13 @@ io.on("connection", (socket) => {
                 duration: 0,
                 participants: [callerId, receiverId]
             }).save();
-            
+
             const msg = await new Message({
                 senderId: callerId,
                 receiverId,
                 callEvent: { status: "missed", callType, duration: 0 }
             }).save();
-            
+
             io.to(socket.id).emit("newMessage", msg);
         }
     });
@@ -188,7 +188,7 @@ io.on("connection", (socket) => {
     socket.on("CALL_ACCEPT", ({ callerId }) => {
         const receiverId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         if (typeof userId === "string") busyUsers.add(userId);
-        
+
         if (!activeCalls.has(callerId)) {
             activeCalls.set(callerId, new Set([callerId, receiverId]));
         } else {
@@ -197,7 +197,7 @@ io.on("connection", (socket) => {
 
         if (userSockets.has(callerId)) {
             busyUsers.add(callerId);
-            io.to(callerId).emit("CALL_ACCEPTED", { 
+            io.to(callerId).emit("CALL_ACCEPTED", {
                 receiverId,
                 callId: callerId
             });
@@ -207,7 +207,7 @@ io.on("connection", (socket) => {
     // 3. Reject Call
     socket.on("CALL_REJECT", async ({ callerId, callType }) => {
         const receiverId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
-        
+
         await new Call({
             callerId,
             receiverId,
@@ -235,7 +235,7 @@ io.on("connection", (socket) => {
     // 4. Cancel Call (Caller cancels before answer)
     socket.on("CALL_CANCEL", async ({ receiverId, callType }) => {
         const callerId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
-        
+
         await new Call({
             callerId,
             receiverId,
@@ -263,7 +263,7 @@ io.on("connection", (socket) => {
     // 5. End Call
     socket.on("CALL_END", async ({ targetId, duration, callType, callId }) => {
         const currentUserId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
-        
+
         if (typeof userId === "string") busyUsers.delete(userId);
 
         let shouldEndCallForEveryone = false;
@@ -274,7 +274,7 @@ io.on("connection", (socket) => {
         if (activeCalls.has(activeCallId)) {
             const participants = activeCalls.get(activeCallId)!;
             participants.delete(currentUserId);
-            
+
             remainingParticipants = new Set(participants);
 
             // Notify others that someone left
@@ -336,8 +336,8 @@ io.on("connection", (socket) => {
         const senderId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         console.log(`[Socket] WEBRTC_SIGNAL (${signalData.type}) from ${senderId} to ${targetId}`);
         if (userSockets.has(targetId)) {
-            io.to(targetId).emit("WEBRTC_SIGNAL", { 
-                senderId, 
+            io.to(targetId).emit("WEBRTC_SIGNAL", {
+                senderId,
                 signalData,
                 callId
             });
@@ -350,12 +350,12 @@ io.on("connection", (socket) => {
     socket.on("ADD_PARTICIPANT_REQUEST", ({ targetId, callId, callerInfo }) => {
         const inviterId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         console.log(`[Socket] ADD_PARTICIPANT_REQUEST from ${inviterId} to ${targetId} for call ${callId}`);
-        
+
         if (userSockets.has(targetId) && !busyUsers.has(targetId)) {
-            io.to(targetId).emit("ADD_PARTICIPANT_INCOMING", { 
-                inviterId, 
+            io.to(targetId).emit("ADD_PARTICIPANT_INCOMING", {
+                inviterId,
                 callerInfo,
-                callId 
+                callId
             });
         } else {
             console.log(`[Socket] ADD_PARTICIPANT_FAILED for ${targetId} (busy/offline)`);
@@ -367,19 +367,19 @@ io.on("connection", (socket) => {
         const joinerId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         console.log(`[Socket] ADD_PARTICIPANT_ACCEPT by ${joinerId} for call ${callId}`);
         busyUsers.add(joinerId);
-        
+
         if (activeCalls.has(callId)) {
             const participants = activeCalls.get(callId)!;
             participants.add(joinerId);
-            
+
             console.log(`[Socket] Call ${callId} now has participants:`, Array.from(participants));
             // Notify existing participants (excluding joiner)
             participants.forEach(participantId => {
                 if (participantId !== joinerId) {
                     console.log(`[Socket] Notifying ${participantId} that ${joinerId} joined`);
-                    io.to(participantId).emit("CALL_PARTICIPANT_JOINED", { 
+                    io.to(participantId).emit("CALL_PARTICIPANT_JOINED", {
                         userId: joinerId,
-                        callId 
+                        callId
                     });
                 }
             });
@@ -403,7 +403,7 @@ io.on("connection", (socket) => {
         }
         const currentUserId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         activeGroupCalls.get(groupId)!.add(currentUserId);
-        
+
         socket.to(`group_${groupId}`).emit("GROUP_CALL_INCOMING", {
             groupId,
             callerId: currentUserId,
@@ -419,7 +419,7 @@ io.on("connection", (socket) => {
             activeGroupCalls.set(groupId, new Set());
         }
         activeGroupCalls.get(groupId)!.add(currentUserId);
-        
+
         // Notify others in the group that someone joined the call
         socket.to(`group_${groupId}`).emit("GROUP_USER_JOINED", {
             userId: currentUserId,
@@ -445,7 +445,7 @@ io.on("connection", (socket) => {
                 duration: duration || 0,
                 participants: [currentUserId]
             }).save();
-            
+
             const msg = await new Message({
                 senderId: currentUserId,
                 groupId: groupId,
@@ -463,19 +463,19 @@ io.on("connection", (socket) => {
 
     socket.on("GROUP_WEBRTC_SIGNAL", ({ targetId, groupId, signalData }) => {
         if (userSockets.has(targetId)) {
-            io.to(targetId).emit("GROUP_WEBRTC_SIGNAL", { 
-                senderId: typeof userId === "string" ? userId : socket.handshake.query.userId, 
+            io.to(targetId).emit("GROUP_WEBRTC_SIGNAL", {
+                senderId: typeof userId === "string" ? userId : socket.handshake.query.userId,
                 groupId,
-                signalData 
+                signalData
             });
         }
     });
-    
+
     // 7. Handle cleanup on disconnect
     socket.on("disconnect", () => {
         if (typeof userId === "string") {
             busyUsers.delete(userId);
-            
+
             // Remove from any active group calls
             activeGroupCalls.forEach((participants, groupId) => {
                 if (participants.has(userId)) {

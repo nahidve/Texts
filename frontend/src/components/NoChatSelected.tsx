@@ -3,7 +3,7 @@ import { MessageSquare, Heart, Sparkles, Send } from "lucide-react";
 const NoChatSelected = () => {
   return (
     <div className="w-full flex flex-1 flex-col items-center justify-center h-full relative overflow-hidden bg-base-100/50">
-      
+
       {/* Animated Background Blobs */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob z-0"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-secondary/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000 z-0"></div>
@@ -30,7 +30,7 @@ const NoChatSelected = () => {
                 </linearGradient>
               </svg>
             </div>
-            
+
             {/* Notification Badge on the Icon */}
             <div className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full border-4 border-base-100 animate-bounce"></div>
           </div>
@@ -38,7 +38,7 @@ const NoChatSelected = () => {
 
         {/* Text Content */}
         <h2 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent mb-6 tracking-tight drop-shadow-sm">
-          Welcome to Texts
+          Welcome to AIGramX
         </h2>
         <p className="text-base-content/70 text-lg font-medium max-w-md mx-auto leading-relaxed">
           Connect with your friends, share stories, and start conversations. Select a chat from the sidebar to begin.

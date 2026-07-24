@@ -20,7 +20,7 @@ const Navbar = () => {
               <MessageSquare className="w-5 h-5 text-primary" />
             </div>
             <h1 className="text-xl font-semibold text-base-content tracking-tight">
-              Texts
+              AIGramX
             </h1>
           </Link>
 

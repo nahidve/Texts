@@ -33,6 +33,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.4",
     "socket.io": "^4.8.1",
-    "texts": "file:.."
+    "AIGramX": "file:.."
   }
 }

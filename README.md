@@ -1,6 +1,6 @@
-# [Texts](https://texts-frontend-swart.vercel.app/)
+# [AIGramX](https://AIGramX-frontend-swart.vercel.app/)
 
-**Texts** is a modern, full-stack real-time chat application built from the ground up in TypeScript. It leverages a robust, type-safe architecture across both frontend and backend, ensuring reliability, maintainability, and developer productivity. Originally developed in JavaScript/JSX, the project was fully migrated to TypeScript to meet the highest standards of code quality and to align with the requirements of leading technology companies.
+**AIGramX** is a modern, full-stack real-time chat application built from the ground up in TypeScript. It leverages a robust, type-safe architecture across both frontend and backend, ensuring reliability, maintainability, and developer productivity. Originally developed in JavaScript/JSX, the project was fully migrated to TypeScript to meet the highest standards of code quality and to align with the requirements of leading technology companies.
 
 ---
 
@@ -25,7 +25,7 @@
 
 ## Project Overview
 
-Texts is a production-grade chat platform that supports real-time messaging, user authentication, profile management, and media sharing. The application is designed for scalability and maintainability, with a strong emphasis on type safety and developer experience. The migration from JSX to TypeScript was a deliberate decision to ensure the codebase meets the expectations of organizations that prioritize robust, type-safe software.
+AIGramX is a production-grade chat platform that supports real-time messaging, user authentication, profile management, and media sharing. The application is designed for scalability and maintainability, with a strong emphasis on type safety and developer experience. The migration from JSX to TypeScript was a deliberate decision to ensure the codebase meets the expectations of organizations that prioritize robust, type-safe software.
 
 ---
 
@@ -141,8 +141,8 @@ For now please run without Docker, follow these steps:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/texts.git
-cd texts
+git clone https://github.com/your-username/AIGramX.git
+cd AIGramX
 
 # Install dependencies for both frontend and backend
 npm install --prefix backend
@@ -213,4 +213,4 @@ This project is licensed under the ISC License.
 
 ---
 
-**Texts** is a demonstration of modern, type-safe, real-time web application development, designed to meet the standards of top-tier technology companies. The migration to TypeScript was a strategic decision to ensure long-term maintainability, reliability, and developer productivity.
+**AIGramX** is a demonstration of modern, type-safe, real-time web application development, designed to meet the standards of top-tier technology companies. The migration to TypeScript was a strategic decision to ensure long-term maintainability, reliability, and developer productivity.
