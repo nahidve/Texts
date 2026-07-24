@@ -6,6 +6,8 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users, UsersIcon, PlusCircle, Search, Pin, Archive, Star, BellOff, MoreVertical, Trash2, PhoneCall } from "lucide-react";
 import CreateGroupModal from "./CreateGroupModal";
 import CallHistory from "./CallHistory";
+import StoryFeed from "./StoryFeed";
+import StoryArchiveModal from "./StoryArchiveModal";
 
 const Sidebar = () => {
   const {
@@ -22,6 +24,7 @@ const Sidebar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState<{ id: string; isGroup: boolean; name: string } | null>(null);
+  const [showStoryArchive, setShowStoryArchive] = useState(false);
 
   useEffect(() => {
     getUsers();
@@ -167,17 +170,27 @@ const Sidebar = () => {
         )}
 
         {activeTab === 'users' ? (
-          <div className="mt-3 flex items-center gap-3">
-            <label className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/50 hover:bg-white/80 transition-all border border-white/60 shadow-sm">
-              <input
-                type="checkbox"
-                checked={showOnlineOnly}
-                onChange={(e) => setShowOnlineOnly(e.target.checked)}
-                className="w-4 h-4 text-cyan-500 bg-white border-slate-300 rounded focus:ring-cyan-500"
-              />
-              <span className="text-xs text-slate-700 font-bold tracking-wide">Online only</span>
-            </label>
-            <span className="text-xs text-cyan-600 font-bold bg-cyan-100 px-2 py-0.5 rounded-full">{Math.max(0, onlineUsers.length - 1)}</span>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <label className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/50 hover:bg-white/80 transition-all border border-white/60 shadow-sm">
+                <input
+                  type="checkbox"
+                  checked={showOnlineOnly}
+                  onChange={(e) => setShowOnlineOnly(e.target.checked)}
+                  className="w-4 h-4 text-cyan-500 bg-white border-slate-300 rounded focus:ring-cyan-500"
+                />
+                <span className="text-xs text-slate-700 font-bold tracking-wide">Online only</span>
+              </label>
+              <span className="text-xs text-cyan-600 font-bold bg-cyan-100 px-2 py-0.5 rounded-full">{Math.max(0, onlineUsers.length - 1)}</span>
+            </div>
+            
+            <button 
+              onClick={() => setShowStoryArchive(true)} 
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 transition-all text-indigo-600 text-xs font-bold border border-indigo-200 shadow-sm"
+            >
+              <Archive className="size-4" />
+              <span className="hidden lg:block">Story Archive</span>
+            </button>
           </div>
         ) : activeTab === 'groups' ? (
           <div className="mt-3 flex items-center justify-between">
@@ -188,6 +201,12 @@ const Sidebar = () => {
           </div>
         ) : null}
       </div>
+      
+      {/* Story Feed */}
+      <div className="hidden lg:block w-full">
+        <StoryFeed />
+      </div>
+
       {/* List */}
       <div className="flex-1 overflow-y-auto w-full py-4 px-2 space-y-2 custom-scrollbar">
         {searchQuery.trim().length >= 2 ? (
@@ -506,7 +525,7 @@ const Sidebar = () => {
             ) : null}
           </div>
 
-        {isCreateGroupOpen && <CreateGroupModal onClose={() => setIsCreateGroupOpen(false)} />}
+
 
         {/* Inline Clear Chat Confirm */}
         {confirmClear && createPortal(
@@ -577,6 +596,14 @@ const Sidebar = () => {
           background: transparent;
         }
       `}</style>
+
+      {isCreateGroupOpen && (
+        <CreateGroupModal onClose={() => setIsCreateGroupOpen(false)} />
+      )}
+      
+      {showStoryArchive && (
+        <StoryArchiveModal onClose={() => setShowStoryArchive(false)} />
+      )}
     </aside>
   );
 };
