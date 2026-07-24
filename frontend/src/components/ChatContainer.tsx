@@ -10,6 +10,7 @@ import { formatMessageTime } from "../lib/utils";
 import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Mic, Star, Clock, BellOff, Phone, Video, Download, File as FileIcon } from "lucide-react";
 import ForwardModal from "./ForwardModal";
 import VoiceMessage from "./VoiceMessage";
+import { Link } from "react-router-dom";
 
 const ChatContainer = () => {
   const {
@@ -294,13 +295,18 @@ const ChatContainer = () => {
                             }
                             if (part.startsWith("http://") || part.startsWith("https://")) {
                               if (part.includes("/join/")) {
-                                return (
-                                  <div key={i} className="mt-2 mb-1">
-                                    <a href={part} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary shadow-md hover:scale-105 transition-transform text-white">
-                                      Join Group
-                                    </a>
-                                  </div>
-                                );
+                                try {
+                                  const urlPath = new URL(part).pathname;
+                                  return (
+                                    <div key={i} className="mt-2 mb-1">
+                                      <Link to={urlPath} className="btn btn-sm bg-discord-blurple hover:bg-discord-blurple/80 border-none shadow-md hover:scale-105 transition-transform text-white">
+                                        Join Group
+                                      </Link>
+                                    </div>
+                                  );
+                                } catch (e) {
+                                  // Fallback if URL parsing fails
+                                }
                               }
                               return (
                                 <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
