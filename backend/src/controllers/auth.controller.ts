@@ -29,12 +29,8 @@ export const signup = async(req: Request, res: Response) => {
             //generate jwt token here defined by a function generateToken()
             generateToken((newUser._id as string), res);
             await newUser.save();
-            res.status(201).json({
-                _id:newUser._id,
-                email:newUser.email,
-                fullName:newUser.fullName,
-                profilePic:newUser.profilePic,
-            })
+            const savedUser = await User.findById(newUser._id).select("-password");
+            res.status(201).json(savedUser);
         } else{res.status(400).json({message:"Invalid user data"});}
 
     }catch(error){
@@ -56,12 +52,8 @@ export const login = async(req: Request, res: Response) => {
 
         generateToken((user._id as string), res);
         
-        res.status(200).json({
-            _id:user._id,
-            email:user.email,
-            fullName:user.fullName,
-            profilePic:user.profilePic,
-        })
+        const userWithoutPassword = await User.findById(user._id).select("-password");
+        res.status(200).json(userWithoutPassword);
     }catch(error){
         const err=error as Error;
         console.log("Error in login controller", err.message);
@@ -126,6 +118,10 @@ export const toggleArchive = async (req: Request, res: Response) => {
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
+        // Initialize arrays if they don't exist
+        if (!user.archivedChats) user.archivedChats = [];
+        if (!user.archivedGroups) user.archivedGroups = [];
+
         const isAlreadyArchived = isGroup
             ? user.archivedGroups.some((id: any) => id.toString() === targetId.toString())
             : user.archivedChats.some((id: any) => id.toString() === targetId.toString());
@@ -160,6 +156,10 @@ export const togglePin = async (req: Request, res: Response) => {
 
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Initialize arrays if they don't exist
+        if (!user.pinnedChats) user.pinnedChats = [];
+        if (!user.pinnedGroups) user.pinnedGroups = [];
 
         const isAlreadyPinned = isGroup
             ? user.pinnedGroups.some((id: any) => id.toString() === targetId.toString())

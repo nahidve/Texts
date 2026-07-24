@@ -135,6 +135,11 @@ export const useAuthStore = create<AuthStore>((set,get) => ({
       const res = await axiosInstance.post("/auth/archive", { targetId, isGroup });
       const authUser = get().authUser;
       set({ authUser: { ...authUser, archivedChats: res.data.archivedChats, archivedGroups: res.data.archivedGroups } });
+      // Determine if it was archived or unarchived
+      const wasArchived = isGroup
+        ? authUser?.archivedGroups?.some((id: any) => id.toString() === targetId.toString())
+        : authUser?.archivedChats?.some((id: any) => id.toString() === targetId.toString());
+      toast.success(wasArchived ? "Chat unarchived" : "Chat archived");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to toggle archive");
     }

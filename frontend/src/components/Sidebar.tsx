@@ -53,24 +53,31 @@ const Sidebar = () => {
     setOpenMenuId(prev => prev === id ? null : id);
   };
 
+  const isIdInArray = (arr: any[] | undefined, targetId: string) => {
+    return arr?.some((item: any) => {
+      const idStr = typeof item === 'string' ? item : item?._id?.toString() || item?.toString();
+      return idStr === targetId.toString();
+    }) ?? false;
+  };
+
   const filteredUsers = users.filter((user) => {
-    const isArchived = authUser?.archivedChats?.some((id: any) => id.toString() === user._id.toString());
+    const isArchived = isIdInArray(authUser?.archivedChats, user._id);
     if (activeTab !== "archived" && isArchived) return false;
     if (activeTab === "archived" && !isArchived) return false;
 
     const matchesSearch = user.fullName.toLowerCase().includes(searchQuery.toLowerCase());
-    if (showOnlineOnly) return onlineUsers.includes(user._id) && matchesSearch;
+    if (activeTab === "users" && showOnlineOnly) return onlineUsers.includes(user._id) && matchesSearch;
     return matchesSearch;
   });
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
-    const aPinned = authUser?.pinnedChats?.some((id: any) => id.toString() === a._id.toString()) ? 1 : 0;
-    const bPinned = authUser?.pinnedChats?.some((id: any) => id.toString() === b._id.toString()) ? 1 : 0;
+    const aPinned = isIdInArray(authUser?.pinnedChats, a._id) ? 1 : 0;
+    const bPinned = isIdInArray(authUser?.pinnedChats, b._id) ? 1 : 0;
     return bPinned - aPinned;
   });
 
   const filteredGroups = groups.filter((group) => {
-    const isArchived = authUser?.archivedGroups?.some((id: any) => id.toString() === group._id.toString());
+    const isArchived = isIdInArray(authUser?.archivedGroups, group._id);
     if (activeTab !== "archived" && isArchived) return false;
     if (activeTab === "archived" && !isArchived) return false;
 
@@ -78,8 +85,8 @@ const Sidebar = () => {
   });
 
   const sortedGroups = [...filteredGroups].sort((a, b) => {
-    const aPinned = authUser?.pinnedGroups?.some((id: any) => id.toString() === a._id.toString()) ? 1 : 0;
-    const bPinned = authUser?.pinnedGroups?.some((id: any) => id.toString() === b._id.toString()) ? 1 : 0;
+    const aPinned = isIdInArray(authUser?.pinnedGroups, a._id) ? 1 : 0;
+    const bPinned = isIdInArray(authUser?.pinnedGroups, b._id) ? 1 : 0;
     return bPinned - aPinned;
   });
 
@@ -267,8 +274,8 @@ const Sidebar = () => {
         ) : activeTab === "users" ? (
               <>
                 {sortedUsers.map((user) => {
-                  const isPinned = authUser?.pinnedChats?.includes(user._id);
-                  const isArchived = authUser?.archivedChats?.some((id: any) => id.toString() === user._id.toString());
+                  const isPinned = isIdInArray(authUser?.pinnedChats, user._id);
+                  const isArchived = isIdInArray(authUser?.archivedChats, user._id);
                   const isMenuOpen = openMenuId === user._id;
                   return (
                     <div
@@ -276,6 +283,7 @@ const Sidebar = () => {
                       className={`
                     w-full flex items-center gap-3 px-3 py-2 rounded-2xl transition-all duration-200
                     group relative shadow-sm cursor-pointer
+                    ${isMenuOpen ? 'z-50' : 'z-0'}
                     ${selectedUser?._id === user._id
                           ? "bg-gradient-to-r from-primary/30 via-accent/20 to-secondary/30 ring-2 ring-primary/60 scale-[1.03] shadow-lg"
                           : "hover:bg-base-200/60 hover:scale-[1.01]"}
@@ -318,16 +326,16 @@ const Sidebar = () => {
                           <MoreVertical className="size-4 text-white/60" />
                         </button>
                         {isMenuOpen && (
-                          <div className="absolute right-0 top-full mt-1 w-44 bg-base-100 shadow-2xl rounded-xl border border-base-300 py-1 z-50 animate-in fade-in zoom-in-95">
+                          <div className="absolute right-0 top-full mt-1 w-44 bg-base-100 shadow-2xl rounded-xl border border-base-300 py-1 z-50 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
                             <button
-                              onClick={() => { togglePin(user._id, false); setOpenMenuId(null); }}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePin(user._id, false); setOpenMenuId(null); }}
                               className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
                             >
                               <Pin className="size-4" />
                               {isPinned ? 'Unpin' : 'Pin to top'}
                             </button>
                             <button
-                              onClick={() => { toggleArchive(user._id, false); setOpenMenuId(null); }}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleArchive(user._id, false); setOpenMenuId(null); }}
                               className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
                             >
                               <Archive className="size-4" />
@@ -335,7 +343,9 @@ const Sidebar = () => {
                             </button>
                             <div className="border-t border-base-300 my-1" />
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 setConfirmClear({ id: user._id, isGroup: false, name: user.fullName });
                                 setOpenMenuId(null);
                               }}
@@ -360,8 +370,8 @@ const Sidebar = () => {
             ) : activeTab === "groups" ? (
               <>
                 {sortedGroups.map((group) => {
-                  const isPinned = authUser?.pinnedGroups?.includes(group._id);
-                  const isArchived = authUser?.archivedGroups?.some((id: any) => id.toString() === group._id.toString());
+                  const isPinned = isIdInArray(authUser?.pinnedGroups, group._id);
+                  const isArchived = isIdInArray(authUser?.archivedGroups, group._id);
                   const isMenuOpen = openMenuId === group._id;
                   return (
                     <div
@@ -369,6 +379,7 @@ const Sidebar = () => {
                       className={`
                     w-full flex items-center gap-3 px-3 py-2 rounded-2xl transition-all duration-200
                     group relative shadow-sm cursor-pointer
+                    ${isMenuOpen ? 'z-50' : 'z-0'}
                     ${selectedGroup?._id === group._id
                           ? "bg-gradient-to-r from-primary/30 via-accent/20 to-secondary/30 ring-2 ring-primary/60 scale-[1.03] shadow-lg"
                           : "hover:bg-base-200/60 hover:scale-[1.01]"}
@@ -404,16 +415,16 @@ const Sidebar = () => {
                           <MoreVertical className="size-4 text-white/60" />
                         </button>
                         {isMenuOpen && (
-                          <div className="absolute right-0 top-full mt-1 w-44 bg-base-100 shadow-2xl rounded-xl border border-base-300 py-1 z-50 animate-in fade-in zoom-in-95">
+                          <div className="absolute right-0 top-full mt-1 w-44 bg-base-100 shadow-2xl rounded-xl border border-base-300 py-1 z-50 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
                             <button
-                              onClick={() => { togglePin(group._id, true); setOpenMenuId(null); }}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePin(group._id, true); setOpenMenuId(null); }}
                               className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
                             >
                               <Pin className="size-4" />
                               {isPinned ? 'Unpin' : 'Pin to top'}
                             </button>
                             <button
-                              onClick={() => { toggleArchive(group._id, true); setOpenMenuId(null); }}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleArchive(group._id, true); setOpenMenuId(null); }}
                               className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
                             >
                               <Archive className="size-4" />
@@ -421,7 +432,9 @@ const Sidebar = () => {
                             </button>
                             <div className="border-t border-base-300 my-1" />
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 setConfirmClear({ id: group._id, isGroup: true, name: group.name });
                                 setOpenMenuId(null);
                               }}
@@ -499,8 +512,8 @@ const Sidebar = () => {
 
         {/* Inline Clear Chat Confirm */}
         {confirmClear && createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-base-100 rounded-2xl shadow-2xl border border-base-300 p-6 w-72 flex flex-col gap-4 animate-in fade-in zoom-in-95">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={e => e.stopPropagation()}>
+            <div className="bg-base-100 rounded-2xl shadow-2xl border border-base-300 p-6 w-72 flex flex-col gap-4 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
               <div className="flex items-center gap-3">
                 <Trash2 className="size-5 text-red-500 flex-shrink-0" />
                 <div>

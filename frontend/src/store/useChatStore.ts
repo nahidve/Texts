@@ -108,7 +108,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   clearChat: async (id: string, isGroup = false) => {
     try {
       await axiosInstance.delete(`/messages/clear/${id}`, { data: { isGroup } });
-      set({ messages: [] });
+      // Clear messages if this is the currently viewed chat
+      const { selectedUser, selectedGroup } = get();
+      const isCurrentChat = isGroup
+        ? selectedGroup?._id === id
+        : selectedUser?._id === id;
+      if (isCurrentChat) {
+        set({ messages: [] });
+      }
       toast.success("Chat cleared");
     } catch (error) {
       toast.error("Failed to clear chat");
