@@ -1,6 +1,7 @@
 import { THEMES } from "../constants";
 import { useThemeStore } from "../store/useThemeStore";
-import { Send, Palette, Eye, Sparkles, Settings as SettingsIcon } from "lucide-react";
+import { useNotificationStore } from "../store/useNotificationStore";
+import { Send, Palette, Eye, Sparkles, Settings as SettingsIcon, Bell, Volume2, AtSign } from "lucide-react";
 
 const PREVIEW_MESSAGES = [
   { id: 1, content: "Hey! How's it going?", isSent: false },
@@ -10,6 +11,7 @@ const PREVIEW_MESSAGES = [
 
 const SettingsPage = () => {
   const { theme, setTheme } = useThemeStore();
+  const { soundEnabled, pushEnabled, mentionsOnly, toggleSound, togglePush, toggleMentionsOnly } = useNotificationStore();
 
   return (
     <div className="min-h-screen pt-20 bg-gradient-to-br from-base-200/50 via-base-100 to-base-200/50">
@@ -172,6 +174,68 @@ const SettingsPage = () => {
           </div>
         </div>
 
+        {/* Notifications Section */}
+        <div className="mt-12">
+          <div className="bg-base-100/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-base-300/50">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500/20 to-indigo-500/20">
+                <Bell className="w-5 h-5 text-blue-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-base-content">Notifications</h2>
+            </div>
+            
+            <p className="text-base-content/70 mb-6">
+              Control how you are alerted about new messages.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              
+              {/* Push Notifications Toggle */}
+              <div className="p-6 rounded-2xl bg-base-200/50 border border-base-300/30 flex items-center justify-between transition-all hover:bg-base-200 cursor-pointer" onClick={togglePush}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <Bell className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base-content">Desktop Push</h3>
+                    <p className="text-xs text-base-content/70">Show browser popups</p>
+                  </div>
+                </div>
+                <input type="checkbox" className="toggle toggle-primary" checked={pushEnabled} readOnly />
+              </div>
+
+              {/* Sound Notifications Toggle */}
+              <div className="p-6 rounded-2xl bg-base-200/50 border border-base-300/30 flex items-center justify-between transition-all hover:bg-base-200 cursor-pointer" onClick={toggleSound}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <Volume2 className="w-5 h-5 text-green-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base-content">Sound Effects</h3>
+                    <p className="text-xs text-base-content/70">Play a pop sound</p>
+                  </div>
+                </div>
+                <input type="checkbox" className="toggle toggle-success" checked={soundEnabled} readOnly />
+              </div>
+
+              {/* Mentions Only Toggle */}
+              <div className="p-6 rounded-2xl bg-base-200/50 border border-base-300/30 flex items-center justify-between transition-all hover:bg-base-200 cursor-pointer" onClick={toggleMentionsOnly}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <AtSign className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base-content">Mentions Only</h3>
+                    <p className="text-xs text-base-content/70">Only notify on @</p>
+                  </div>
+                </div>
+                <input type="checkbox" className="toggle toggle-secondary" checked={mentionsOnly} readOnly />
+              </div>
+
+            </div>
+          </div>
+        </div>
+
         {/* Additional Settings Section */}
         <div className="mt-12">
           <div className="bg-base-100/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-base-300/50">
@@ -183,15 +247,7 @@ const SettingsPage = () => {
             </div>
             
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="p-6 rounded-2xl bg-base-200/50 border border-base-300/30">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                    <div className="w-4 h-4 bg-primary rounded" />
-                  </div>
-                  <h3 className="font-semibold text-base-content">Notifications</h3>
-                </div>
-                <p className="text-sm text-base-content/70">Customize your notification preferences</p>
-              </div>
+
               
               <div className="p-6 rounded-2xl bg-base-200/50 border border-base-300/30">
                 <div className="flex items-center gap-3 mb-3">

@@ -15,6 +15,7 @@ import { Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useCallStore } from './store/useCallStore'
 import { CallUI } from './components/CallUI'
+import NotificationManager from './components/NotificationManager'
 
 
 
@@ -68,6 +69,7 @@ const App = () => {
 
       <Toaster />
       <CallUI />
+      <NotificationManager />
     </div>
   )
 }

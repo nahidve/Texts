@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Image, Send, X, BarChart2, Check, XCircle, Smile, Mic, Trash2, Pause, Play, BellOff, Clock, Paperclip, Sticker } from "lucide-react";
+import { Image, Send, X, BarChart2, Check, XCircle, Mic, Trash2, Pause, Play, BellOff, Clock, Paperclip, Sticker } from "lucide-react";
 import toast from "react-hot-toast";
 import CreatePollModal from "./CreatePollModal";
 import MediaPicker from "./MediaPicker";
@@ -336,7 +336,7 @@ const MessageInput = () => {
       setText(prev => prev + url);
       return;
     }
-    
+
     // For GIFs and Stickers, send immediately as an image
     try {
       await sendMessage({
@@ -403,7 +403,7 @@ const MessageInput = () => {
     : [];
 
   return (
-    <div 
+    <div
       className={`relative z-10 w-full px-4 pb-4 pt-2 backdrop-blur-md transition-all ${isDragging ? 'bg-primary/10 ring-2 ring-primary ring-inset rounded-t-xl' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -413,7 +413,7 @@ const MessageInput = () => {
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-base-100/80 backdrop-blur-sm rounded-t-xl pointer-events-none">
           <div className="flex flex-col items-center gap-2 text-primary font-bold animate-bounce">
             <div className="p-4 bg-primary/20 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><polyline points="9 15 12 12 15 15" /></svg>
             </div>
             Drop files here to upload
           </div>
@@ -444,7 +444,7 @@ const MessageInput = () => {
         <div className="mb-3 flex items-center gap-3">
           <div className="relative group transition-transform hover:scale-[1.02] bg-base-200 border border-base-300 rounded-xl p-3 flex items-center gap-3 shadow-sm pr-10">
             <div className="p-2 bg-primary/20 text-primary rounded-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></svg>
             </div>
             <div className="flex flex-col max-w-[150px] sm:max-w-[200px]">
               <span className="text-sm font-semibold truncate">{fileName}</span>
@@ -489,7 +489,7 @@ const MessageInput = () => {
 
       {/* Media Picker Popup (GIFs, Stickers, Emojis) */}
       {showMediaPicker && !editingMessage && (
-        <MediaPicker 
+        <MediaPicker
           onSelect={handleMediaSelect}
           onClose={() => setShowMediaPicker(false)}
         />

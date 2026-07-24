@@ -29,7 +29,7 @@ type StoryStore = {
   unsubscribeFromStories: () => void;
 };
 
-export const useStoryStore = create<StoryStore>((set, get) => ({
+export const useStoryStore = create<StoryStore>((set) => ({
   activeStories: [],
   archivedStories: [],
   isUploading: false,
@@ -62,7 +62,7 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
   uploadStory: async (media, mediaType) => {
     set({ isUploading: true });
     try {
-      const res = await axiosInstance.post("/stories/upload", { media, mediaType });
+      await axiosInstance.post("/stories/upload", { media, mediaType });
       // The socket event will handle adding it to activeStories, 
       // but we can add it optimistically too.
       toast.success("Story uploaded!");
@@ -102,7 +102,7 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
       }));
     });
 
-    socket.on("storyViewed", ({ storyId, viewerId }) => {
+    socket.on("storyViewed", ({ storyId, viewerId }: { storyId: string, viewerId: string }) => {
       set((state) => ({
         activeStories: state.activeStories.map(s => 
           s._id === storyId 
@@ -112,7 +112,7 @@ export const useStoryStore = create<StoryStore>((set, get) => ({
       }));
     });
 
-    socket.on("storyReacted", ({ storyId, reaction }) => {
+    socket.on("storyReacted", ({ storyId, reaction }: { storyId: string, reaction: any }) => {
       set((state) => ({
         activeStories: state.activeStories.map(s => {
           if (s._id !== storyId) return s;

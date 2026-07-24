@@ -30,7 +30,7 @@ export const uploadStory = async (req: Request, res: Response) => {
     });
 
     await newStory.save();
-    
+
     // Populate user info for immediate frontend use
     await newStory.populate("userId", "fullName profilePic");
 
@@ -67,7 +67,7 @@ export const getActiveStories = async (req: Request, res: Response) => {
 export const getArchivedStories = async (req: Request, res: Response) => {
   try {
     const userId = (req.user!._id as any);
-    
+
     const stories = await Story.find({
       userId,
       $or: [
@@ -100,7 +100,7 @@ export const viewStory = async (req: Request, res: Response) => {
     if (!story.viewers.includes(userId)) {
       story.viewers.push(userId);
       await story.save();
-      
+
       // Notify author that someone viewed their story
       const authorSocketId = getReceiverSocketId(story.userId.toString());
       if (authorSocketId) {
