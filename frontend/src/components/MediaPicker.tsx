@@ -5,8 +5,8 @@ import EmojiPicker from 'emoji-picker-react';
 import { STICKER_PACKS } from '../lib/stickers';
 import { Clock, Search, X } from 'lucide-react';
 
-// Initialize with environment variable or fallback to public SDK Key
-const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY || 'GlVGYHqc3SyCEGqmeYsScSEC1WE22k5';
+// Initialize with environment variable
+const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY;
 const gf = new GiphyFetch(GIPHY_API_KEY);
 
 interface MediaPickerProps {
