@@ -321,7 +321,7 @@ const ChatContainer = () => {
                         </div>
                       )}
 
-                      {message.callEvent && (
+                      {message.callEvent && message.callEvent.status && (
                         <div className="flex items-center gap-3 p-3 bg-base-300/50 rounded-xl border border-base-300 w-full min-w-[200px] mt-2 shadow-sm">
                           <div className={`p-2 rounded-full ${message.callEvent.status === 'missed' || message.callEvent.status === 'rejected' || message.callEvent.status === 'cancelled' ? 'bg-error/20 text-error' : 'bg-primary/20 text-primary'}`}>
                             {message.callEvent.callType === 'video' ? <Video className="size-5" /> : <Phone className="size-5" />}
