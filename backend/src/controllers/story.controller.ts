@@ -30,7 +30,7 @@ export const uploadStory = async (req: Request, res: Response) => {
     });
 
     await newStory.save();
-    
+
     // Populate user info for immediate frontend use
     await newStory.populate("userId", "fullName profilePic");
 
@@ -67,7 +67,7 @@ export const getActiveStories = async (req: Request, res: Response) => {
 export const getArchivedStories = async (req: Request, res: Response) => {
   try {
     const userId = (req.user!._id as any);
-    
+
     const stories = await Story.find({
       userId,
       $or: [
@@ -100,7 +100,7 @@ export const viewStory = async (req: Request, res: Response) => {
     if (!story.viewers.includes(userId)) {
       story.viewers.push(userId);
       await story.save();
-      
+
       // Notify author that someone viewed their story
       const authorSocketId = getReceiverSocketId(story.userId.toString());
       if (authorSocketId) {
@@ -128,8 +128,8 @@ export const reactToStory = async (req: Request, res: Response) => {
     }
 
     // Check if user already reacted
-    const reactionIndex = story.reactions.findIndex((r: any) => r.userId.toString() === userId.toString());
-    
+    const existingReaction = story.reactions.find((r: any) => r.userId.toString() === userId.toString());
+
     if (reactionIndex > -1) {
       story.reactions[reactionIndex].emoji = emoji;
     } else {
@@ -142,9 +142,9 @@ export const reactToStory = async (req: Request, res: Response) => {
     // Notify author of reaction
     const authorSocketId = getReceiverSocketId(story.userId.toString());
     if (authorSocketId) {
-      io.to(authorSocketId).emit("storyReacted", { 
-        storyId: id, 
-        reaction: story.reactions.find((r: any) => r.userId._id.toString() === userId.toString()) 
+      io.to(authorSocketId).emit("storyReacted", {
+        storyId: id,
+        reaction: story.reactions.find((r: any) => r.userId._id.toString() === userId.toString())
       });
     }
 
