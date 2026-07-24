@@ -531,8 +531,11 @@ const MessageInput = () => {
       {/* Input */}
       <form
         onSubmit={handleSendMessage}
-        className={`relative flex items-center gap-3 bg-base-200/70 border backdrop-blur-md shadow-xl px-5 py-3 ${editingMessage || replyingToMessage ? 'rounded-b-2xl rounded-t-none border-primary/30 border-t-0 bg-primary/5' : 'rounded-2xl border-base-300'
-          }`}
+        className={`relative flex items-center gap-1.5 bg-base-100 px-3 py-2 transition-all hover:border-primary/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ${
+          editingMessage || replyingToMessage 
+            ? 'rounded-b-2xl rounded-t-none border-t border-base-300' 
+            : 'rounded-2xl border border-base-300 shadow-sm'
+        }`}
       >
         {isRecording ? (
           <div className="flex-1 flex items-center justify-between px-2 w-full animate-in slide-in-from-bottom-2 fade-in duration-200">
@@ -588,8 +591,8 @@ const MessageInput = () => {
         ) : (
           <input
             type="text"
-            className="flex-1 bg-transparent focus:outline-none placeholder:italic placeholder:text-sm sm:placeholder:text-base text-base"
-            placeholder="Type something"
+            className="flex-1 bg-transparent focus:outline-none placeholder:text-base-content/50 text-sm sm:text-base h-10 px-2"
+            placeholder="Type something..."
             value={text}
             onChange={handleTextChange}
           />
@@ -608,10 +611,9 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${imagePreview ? "text-success" : "text-base-content/60"
-              }`}
+            className={`transition-colors p-2 rounded-full hover:bg-base-200 ${imagePreview ? "text-success bg-success/10" : "text-base-content/60 hover:text-base-content"}`}
           >
-            <Image size={22} />
+            <Image size={20} />
           </button>
         )}
 
@@ -628,11 +630,10 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => fileInputRef2.current?.click()}
-            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${filePreview ? "text-primary" : "text-base-content/60"
-              }`}
+            className={`transition-colors p-2 rounded-full hover:bg-base-200 ${filePreview ? "text-primary bg-primary/10" : "text-base-content/60 hover:text-base-content"}`}
             title="Attach file"
           >
-            <Paperclip size={22} />
+            <Paperclip size={20} />
           </button>
         )}
 
@@ -641,10 +642,10 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => setShowPollModal(true)}
-            className="transition-all duration-200 p-2 rounded-full text-base-content/60 hover:scale-110"
+            className="transition-colors p-2 rounded-full text-base-content/60 hover:bg-base-200 hover:text-base-content"
             title="Create Poll"
           >
-            <BarChart2 size={22} />
+            <BarChart2 size={20} />
           </button>
         )}
 
@@ -653,10 +654,10 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => setShowMediaPicker(!showMediaPicker)}
-            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${showMediaPicker ? "text-primary" : "text-base-content/60"}`}
+            className={`transition-colors p-2 rounded-full hover:bg-base-200 ${showMediaPicker ? "text-primary bg-primary/10" : "text-base-content/60 hover:text-base-content"}`}
             title="GIFs & Stickers"
           >
-            <Sticker size={22} />
+            <Sticker size={20} />
           </button>
         )}
 
@@ -711,10 +712,10 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={startRecording}
-            className="transition-all duration-200 p-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-content hover:scale-110 shadow-sm"
+            className="transition-all duration-200 p-2.5 rounded-full bg-primary text-primary-content hover:scale-105 shadow-sm ml-1"
             title="Record Audio"
           >
-            <Mic size={22} />
+            <Mic size={20} />
           </button>
         ) : (
           <button

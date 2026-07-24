@@ -54,7 +54,7 @@ const ChatHeader = () => {
           title="View profile"
         >
           <div className="avatar relative">
-            <div className="size-10 rounded-full border border-discord-surface shadow-sm overflow-hidden bg-[#2b2d31]">
+            <div className="size-10 rounded-full border border-base-300 shadow-sm overflow-hidden bg-base-200">
               <img
                 src={selectedGroup ? (selectedGroup.avatar || "/avatar.png") : (selectedUser?.profilePic || "/avatar.png")}
                 alt={selectedGroup ? selectedGroup.name : selectedUser?.fullName}
@@ -63,27 +63,27 @@ const ChatHeader = () => {
             </div>
             {/* Online/Offline indicator for users */}
             {selectedUser && (
-              <div className={`absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-[#313338] shadow-sm ${isOnline ? "bg-discord-green" : "bg-discord-surface"
+              <div className={`absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-base-100 shadow-sm ${isOnline ? "bg-success" : "bg-base-300"
                 }`} />
             )}
           </div>
 
           {/* User/Group info */}
           <div className="flex flex-col">
-            <h3 className="font-semibold text-base tracking-wide text-white">{selectedGroup ? selectedGroup.name : selectedUser?.fullName}</h3>
+            <h3 className="font-semibold text-base tracking-wide text-base-content">{selectedGroup ? selectedGroup.name : selectedUser?.fullName}</h3>
             {selectedUser ? (
               <div className="flex items-center gap-1.5">
-                <p className="text-xs font-medium text-discord-ink/70">
+                <p className="text-xs font-medium text-base-content/70">
                   {isOnline ? "Online" : selectedUser.lastSeen ? `Last seen at ${new Date(selectedUser.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "Offline"}
                 </p>
               </div>
             ) : (
               <div className="flex flex-col">
-                <p className="text-xs font-medium text-discord-ink/70">
+                <p className="text-xs font-medium text-base-content/70">
                   {selectedGroup?.members.length} members
                 </p>
                 {selectedGroup?.description && (
-                  <p className="text-[11px] text-discord-ink/50 truncate max-w-md mt-0.5">
+                  <p className="text-[11px] text-base-content/50 truncate max-w-md mt-0.5">
                     {selectedGroup.description}
                   </p>
                 )}
@@ -96,7 +96,7 @@ const ChatHeader = () => {
           {/* Local Search Button */}
           <button
             onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className={`p-1.5 rounded-md transition-all duration-200 ${isSearchOpen ? 'bg-discord-surface text-white' : 'hover:bg-white/5 text-discord-ink/70 hover:text-white'}`}
+            className={`p-1.5 rounded-xl transition-all duration-200 ${isSearchOpen ? 'bg-primary/20 text-primary' : 'hover:bg-base-200 text-base-content/70 hover:text-base-content'}`}
             title="Search inside conversation"
           >
             <Search className="size-5" />
@@ -106,10 +106,10 @@ const ChatHeader = () => {
           {selectedGroup && (
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="p-1.5 rounded-md hover:bg-white/5 transition-all duration-200 group"
+              className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group"
               title="Settings"
             >
-              <Settings className="size-5 text-discord-ink/70 group-hover:text-white transition-colors" />
+              <Settings className="size-5 text-base-content/70 group-hover:text-base-content transition-colors" />
             </button>
           )}
 
@@ -119,28 +119,28 @@ const ChatHeader = () => {
               <button
                 onClick={() => initiateCall(selectedUser, "audio")}
                 disabled={!isOnline}
-                className="p-1.5 rounded-md hover:bg-white/5 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Voice Call"
               >
-                <Phone className="size-5 text-discord-ink/70 group-hover:text-white transition-colors" />
+                <Phone className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
               </button>
               <button
                 onClick={() => initiateCall(selectedUser, "video")}
                 disabled={!isOnline}
-                className="p-1.5 rounded-md hover:bg-white/5 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Video Call"
               >
-                <Video className="size-5 text-discord-ink/70 group-hover:text-white transition-colors" />
+                <Video className="size-5 text-base-content/70 group-hover:text-primary transition-colors" />
               </button>
-              <button onClick={() => setSelectedUser(null)} className="p-1.5 rounded-md hover:bg-white/5 transition-all duration-200 group">
-                <X className="size-5 text-discord-ink/70 group-hover:text-white transition-colors" />
+              <button onClick={() => setSelectedUser(null)} className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group">
+                <X className="size-5 text-base-content/70 group-hover:text-base-content transition-colors" />
               </button>
             </>
           )}
 
           {selectedGroup && (
-            <button onClick={() => setSelectedGroup(null)} className="p-1.5 rounded-md hover:bg-white/5 transition-all duration-200 group">
-              <X className="size-5 text-discord-ink/70 group-hover:text-white transition-colors" />
+            <button onClick={() => setSelectedGroup(null)} className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group">
+              <X className="size-5 text-base-content/70 group-hover:text-base-content transition-colors" />
             </button>
           )}
 
@@ -153,11 +153,11 @@ const ChatHeader = () => {
               }}
               className="p-1.5 rounded-xl hover:bg-base-200 transition-all duration-200 group"
             >
-              <MoreVertical className="size-5 text-discord-ink/70 group-hover:text-white" />
+              <MoreVertical className="size-5 text-base-content/70 group-hover:text-base-content" />
             </button>
             {isDropdownOpen && (
               <div
-                className="absolute right-0 top-full mt-2 w-48 bg-[#111214] shadow-2xl rounded-md border border-discord-surface py-2 z-50 animate-in fade-in zoom-in-95"
+                className="absolute right-0 top-full mt-2 w-48 bg-base-100 shadow-2xl rounded-xl border border-base-300 py-2 z-50 animate-in fade-in zoom-in-95"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 {isMuted ? (
@@ -227,10 +227,10 @@ const ChatHeader = () => {
                   <Image className="size-4 opacity-50" />
                   Remove Wallpaper
                 </button>
-                <div className="border-t border-discord-surface my-1"></div>
+                <div className="border-t border-base-300 my-1"></div>
                 <button
                   onClick={() => toggleArchive(targetId!, isGroup)}
-                  className="w-full text-left px-4 py-2 hover:bg-discord-blurple hover:text-white text-discord-ink/80 text-sm flex items-center gap-2 transition-colors"
+                  className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2"
                 >
                   <Archive className="size-4" />
                   {isArchived ? 'Unarchive Chat' : 'Archive Chat'}
@@ -241,7 +241,7 @@ const ChatHeader = () => {
                       clearChat(targetId!, isGroup);
                     }
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-red-500 hover:text-white text-red-400 text-sm flex items-center gap-2 transition-colors"
+                  className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2 text-red-500"
                 >
                   <Trash2 className="size-4" />
                   Clear Chat
@@ -255,13 +255,13 @@ const ChatHeader = () => {
       {/* Local Search Bar */}
       {isSearchOpen && (
         <div className="mt-3 relative animate-in slide-in-from-top-2 fade-in duration-200">
-          <Search className="absolute left-3 top-2.5 size-4 text-discord-ink/50" />
+          <Search className="absolute left-3 top-2.5 size-4 text-base-content/50" />
           <input
             type="text"
             placeholder="Search in this conversation..."
             value={localSearchQuery}
             onChange={(e) => setLocalSearchQuery(e.target.value)}
-            className="w-full bg-[#1e1f22] rounded-md pl-10 pr-10 py-1.5 text-sm text-discord-ink placeholder-discord-ink/50 focus:outline-none transition-all"
+            className="w-full bg-base-200/50 border border-base-300 rounded-lg pl-10 pr-10 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
             autoFocus
           />
           {localSearchQuery && (

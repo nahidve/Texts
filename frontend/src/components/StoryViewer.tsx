@@ -405,28 +405,47 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ userGroups, initialGroupIndex
 
       {/* Viewers Modal */}
       {showViewers && (
-        <div className="fixed inset-x-0 bottom-0 sm:bottom-auto sm:inset-auto sm:right-4 sm:top-1/2 sm:-translate-y-1/2 z-[110] bg-base-100 rounded-t-3xl sm:rounded-2xl w-full sm:w-80 max-h-[60vh] flex flex-col shadow-2xl story-ui animate-in slide-in-from-bottom-full sm:slide-in-from-right-8">
-          <div className="p-4 border-b border-base-300 flex justify-between items-center">
-            <h3 className="font-bold flex items-center gap-2"><Eye size={18} /> Viewed by {currentStory.viewers.length}</h3>
-            <button onClick={() => setShowViewers(false)} className="p-1 hover:bg-base-200 rounded-full"><X size={18} /></button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2">
-            {currentStory.viewers.length === 0 ? (
-              <div className="text-center py-8 text-base-content/50 text-sm">No views yet</div>
-            ) : (
-              currentStory.viewers.map((viewer: any) => (
-                <div key={viewer._id} className="flex items-center gap-3 p-2 hover:bg-base-200 rounded-lg">
-                  <img src={viewer.profilePic || "/avatar.png"} className="w-10 h-10 rounded-full" alt="" />
-                  <span className="font-medium text-sm">{viewer.fullName}</span>
-                  {/* Show reaction if this viewer reacted */}
-                  {currentStory.reactions?.find((r: any) => r.userId._id === viewer._id) && (
-                    <span className="ml-auto text-xl">
-                      {currentStory.reactions.find((r: any) => r.userId._id === viewer._id).emoji}
-                    </span>
-                  )}
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-0 story-ui">
+          {/* Backdrop specifically for this modal to capture clicks outside */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in" onClick={() => setShowViewers(false)} />
+          
+          <div className="relative bg-base-100 rounded-2xl w-[90%] max-w-[260px] max-h-[50vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 overflow-hidden border border-base-300">
+            <div className="p-3 bg-base-200/50 border-b border-base-300 flex justify-between items-center">
+              <div className="flex items-center gap-1.5 text-base-content/80">
+                <Eye className="size-3.5 opacity-70" />
+                <h3 className="font-semibold text-xs">Viewed by {currentStory.viewers.length}</h3>
+              </div>
+              <button onClick={() => setShowViewers(false)} className="p-1 hover:bg-base-300 text-base-content/70 hover:text-base-content rounded-full transition-colors"><X size={14} /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
+              {currentStory.viewers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 px-2 text-center">
+                  <div className="w-12 h-12 bg-base-200 rounded-full flex items-center justify-center mb-2">
+                    <Eye className="size-6 text-base-content/20" />
+                  </div>
+                  <p className="text-base-content/60 font-medium text-xs">No views yet</p>
                 </div>
-              ))
-            )}
+              ) : (
+                <div className="space-y-1">
+                  {currentStory.viewers.map((viewer: any) => (
+                    <div key={viewer._id} className="flex items-center gap-3 p-2 hover:bg-base-200/60 rounded-xl transition-colors">
+                      <img src={viewer.profilePic || "/avatar.png"} className="size-11 rounded-full object-cover border border-base-300 shadow-sm" alt={viewer.fullName} />
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="font-semibold text-sm text-base-content truncate">{viewer.fullName}</span>
+                      </div>
+                      {/* Show reaction if this viewer reacted */}
+                      {currentStory.reactions?.find((r: any) => r.userId._id === viewer._id) && (
+                        <div className="bg-base-200 p-1.5 rounded-full shadow-sm flex-shrink-0 animate-in zoom-in">
+                          <span className="text-lg leading-none">
+                            {currentStory.reactions.find((r: any) => r.userId._id === viewer._id).emoji}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
