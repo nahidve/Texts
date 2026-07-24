@@ -113,7 +113,7 @@ const ChatContainer = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-auto">
+    <div className="flex-1 flex flex-col overflow-auto h-full relative">
       <ChatHeader />
 
       {pinnedMessages.length > 0 && (
@@ -126,14 +126,22 @@ const ChatContainer = () => {
         </div>
       )}
 
-      <div
-        className={`flex-1 overflow-y-auto p-4 space-y-6 relative ${currentWallpaper ? 'bg-cover bg-center bg-no-repeat bg-fixed' : 'bg-base-100'}`}
-        style={currentWallpaper ? { backgroundImage: `url(${currentWallpaper})` } : {}}
-      >
-        {/* Dark overlay for better text readability on wallpapers */}
-        {currentWallpaper && <div className="absolute inset-0 bg-base-100/40 z-0 pointer-events-none" />}
+      <div className="flex-1 relative flex flex-col overflow-hidden">
+        {/* Fixed Background Layer for Wallpaper */}
+        {currentWallpaper ? (
+          <>
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0" 
+              style={{ backgroundImage: `url(${currentWallpaper})` }}
+            />
+            {/* Dark overlay for readability */}
+            <div className="absolute inset-0 bg-[#313338]/60 pointer-events-none z-0" />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-[#313338] pointer-events-none z-0" />
+        )}
 
-        <div className="relative z-10 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 relative z-10 custom-scrollbar">
           {filteredMessages.map((message) => {
             const isMe = message.senderId === authUser?._id;
             const senderInfo = getSenderInfo(message.senderId);
