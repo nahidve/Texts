@@ -14,12 +14,12 @@ const Sidebar = () => {
     getUsers, users, selectedUser, setSelectedUser, isUsersLoading,
     getGroups, groups, selectedGroup, setSelectedGroup, isGroupsLoading,
     searchGlobal, globalSearchResults, isSearchingGlobal, setHighlightedMessageId,
-    getStarredMessages, starredMessages
+    getStarredMessages, starredMessages,
+    activeTab
   } = useChatStore();
   const { onlineUsers, authUser, toggleArchive, togglePin } = useAuthStore();
   const { clearChat } = useChatStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState<"users" | "groups" | "calls" | "archived" | "starred">("users");
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -108,54 +108,11 @@ const Sidebar = () => {
   if (isUsersLoading || isGroupsLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className="h-full w-20 lg:w-80 flex flex-col transition-all duration-200 relative glass-panel border-r border-base-300 overflow-hidden">
+    <aside className="h-full w-full md:w-80 flex flex-col transition-all duration-200 relative glass-panel border-r border-base-300 overflow-hidden">
 
       <div className="relative z-10 border-b border-base-300 w-full p-4 flex flex-col gap-2 bg-base-100/50">
-        <div className="flex overflow-x-auto hide-scrollbar gap-1 bg-base-200/50 rounded-xl p-1 shadow-sm border border-base-300">
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'users' ? 'bg-base-100 text-primary shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
-            title="Contacts"
-          >
-            <Users className="size-4" />
-            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Contacts</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("groups")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'groups' ? 'bg-base-100 text-secondary shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
-            title="Groups"
-          >
-            <UsersIcon className="size-4" />
-            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Groups</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("archived")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'archived' ? 'bg-base-100 text-warning shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
-            title="Archived"
-          >
-            <Archive className="size-4" />
-            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Archived</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("starred")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'starred' ? 'bg-base-100 text-warning shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
-            title="Starred"
-          >
-            <Star className="size-4" />
-            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Starred</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("calls")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'calls' ? 'bg-base-100 text-success shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
-            title="Calls"
-          >
-            <PhoneCall className="size-4" />
-            <span className="text-[10px] lg:text-xs font-bold whitespace-nowrap">Calls</span>
-          </button>
-        </div>
-
         {activeTab !== "calls" && (
-          <div className="relative mt-2 hidden lg:block">
+          <div className="relative hidden lg:block">
             <Search className="absolute left-3 top-2.5 size-4 text-base-content/50" />
             <input
               type="text"
@@ -198,11 +155,6 @@ const Sidebar = () => {
             </button>
           </div>
         ) : null}
-      </div>
-
-      {/* Story Feed */}
-      <div className="hidden lg:block w-full">
-        <StoryFeed />
       </div>
 
       {/* List */}

@@ -59,7 +59,7 @@ const StoryFeed = () => {
 
   return (
     <>
-      <div className="flex gap-4 p-4 overflow-x-auto no-scrollbar border-b border-base-300">
+      <div className="flex gap-4 p-2 overflow-x-auto no-scrollbar items-center">
         
         {/* Add Story Button */}
         <div className="flex flex-col items-center gap-1 shrink-0 cursor-pointer" onClick={() => fileInputRef.current?.click()}>

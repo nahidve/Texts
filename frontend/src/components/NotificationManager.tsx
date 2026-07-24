@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useChatStore } from '../store/useChatStore';
 import { useNotificationStore } from '../store/useNotificationStore';
+import toast from 'react-hot-toast';
 
 // Actually, here is a small synthetic beep using base64:
 const BEEP_SOUND = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAD//w==";
@@ -33,9 +34,9 @@ const NotificationManager = () => {
 
       // Do not notify if the user is currently viewing the chat
       if (isGroup) {
-        if (selectedGroup && selectedGroup._id === message.groupId) return;
+        if (selectedGroup && String(selectedGroup._id) === String(message.groupId)) return;
       } else {
-        if (selectedUser && selectedUser._id === senderId) return;
+        if (selectedUser && String(selectedUser._id) === String(senderId)) return;
       }
 
       // Check if user was mentioned
@@ -52,16 +53,22 @@ const NotificationManager = () => {
       }
 
       // 2. Browser Push Notification
+      let title = isGroup ? "New Group Message" : "New Message";
+      if (isMentioned) title = "You were mentioned!";
+      
+      let body = message.text || (message.image ? '📷 Image' : (message.audio ? '🎵 Audio' : (message.poll ? '📊 Poll' : '📄 File')));
+      
       if (pushEnabled && "Notification" in window && Notification.permission === "granted") {
-        let title = isGroup ? "New Group Message" : "New Message";
-        if (isMentioned) title = "You were mentioned!";
-        
-        let body = message.text || (message.image ? '📷 Image' : '🎵 Audio');
-        
         new Notification(title, {
           body,
           icon: "/avatar.png",
           tag: isGroup ? message.groupId : message.senderId // groups notifications by chat
+        });
+      } else {
+        // Fallback to in-app toast notification
+        toast(`${title}: ${body}`, {
+          icon: isMentioned ? '🔔' : '💬',
+          duration: 4000
         });
       }
     };
@@ -76,15 +83,19 @@ const NotificationManager = () => {
         if (soundEnabled && audioRef.current) audioRef.current.play().catch(()=>{});
         if (pushEnabled && "Notification" in window && Notification.permission === "granted") {
           new Notification("New Reaction!", { body: "Someone reacted to your message or story.", icon: "/avatar.png" });
+        } else {
+          toast("New Reaction! Someone reacted to your message or story.", { icon: '❤️', duration: 3000 });
         }
       }
     };
 
     // Call Handlers
     const onCall = (data: any) => {
+      const callerName = data.callerInfo?.fullName || "Someone";
       if (pushEnabled && "Notification" in window && Notification.permission === "granted") {
-        const callerName = data.callerInfo?.fullName || "Someone";
         new Notification("Incoming Call", { body: `${callerName} is calling you...`, icon: "/avatar.png" });
+      } else {
+        toast(`Incoming Call: ${callerName} is calling you...`, { icon: '📞', duration: 4000 });
       }
       if (soundEnabled && audioRef.current) audioRef.current.play().catch(()=>{});
     };

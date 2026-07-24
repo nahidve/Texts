@@ -95,15 +95,14 @@ export const sendMessage = async (req: Request, res: Response) => {
         await newMessage.save();
         await newMessage.populate("replyTo", "text image senderId isForwarded");
 
-        const receiverSocketId = getReceiverSocketId(receiverId as string);
-        const senderSocketId = getReceiverSocketId(senderId as string);
+        const messagePayload = newMessage.toJSON();
 
         if (!scheduledFor) {
-            if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", newMessage);
-            if (senderSocketId) io.to(senderSocketId).emit("newMessage", newMessage);
+            io.to(receiverId as string).emit("newMessage", messagePayload);
+            io.to(senderId.toString()).emit("newMessage", messagePayload);
         } else {
             // Just emit to sender to show it's scheduled
-            if (senderSocketId) io.to(senderSocketId).emit("newMessage", newMessage);
+            io.to(senderId.toString()).emit("newMessage", messagePayload);
 
             const delay = new Date(scheduledFor).getTime() - Date.now();
             if (delay > 0) {
@@ -112,16 +111,14 @@ export const sendMessage = async (req: Request, res: Response) => {
                     if (msg) {
                         msg.isScheduled = false;
                         await msg.save();
-                        if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", msg);
+                        const updatedMsgPayload = msg.toJSON();
+                        io.to(receiverId as string).emit("newMessage", updatedMsgPayload);
                         // Also notify sender it was sent
-                        if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", msg);
+                        io.to(senderId.toString()).emit("messageUpdated", updatedMsgPayload);
                     }
                 }, delay);
             }
         }
-        // Emit to receiver and sender (rooms are their user IDs)
-        io.to(receiverId as string).emit("newMessage", newMessage);
-        io.to(senderId as string).emit("newMessage", newMessage);
 
         res.status(201).json(newMessage);
     } catch (error) {
@@ -203,11 +200,13 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
         await newMessage.populate("replyTo", "text image senderId isForwarded");
         await newMessage.populate("senderId", "fullName profilePic");
 
+        const messagePayload = newMessage.toJSON();
+
         if (!scheduledFor) {
-            io.to(`group_${groupId}`).emit("newGroupMessage", newMessage);
+            io.to(`group_${groupId}`).emit("newGroupMessage", messagePayload);
         } else {
-            const senderSocketId = getReceiverSocketId(senderId as string);
-            if (senderSocketId) io.to(senderSocketId).emit("newGroupMessage", newMessage);
+            const senderIdStr = senderId._id ? senderId._id.toString() : senderId.toString();
+            io.to(senderIdStr).emit("newGroupMessage", messagePayload);
 
             const delay = new Date(scheduledFor).getTime() - Date.now();
             if (delay > 0) {
@@ -216,9 +215,10 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
                     if (msg) {
                         msg.isScheduled = false;
                         await msg.save();
-                        io.to(`group_${groupId}`).emit("newGroupMessage", msg);
+                        const updatedMsgPayload = msg.toJSON();
+                        io.to(`group_${groupId}`).emit("newGroupMessage", updatedMsgPayload);
                         // Also notify sender
-                        if (senderSocketId) io.to(senderSocketId).emit("messageUpdated", msg);
+                        io.to(senderIdStr).emit("messageUpdated", updatedMsgPayload);
                     }
                 }, delay);
             }

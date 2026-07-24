@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, X, Settings, Phone, Video, MoreVertical, BellOff, Image, Archive, Trash2 } from "lucide-react";
+import { Search, X, Settings, Phone, Video, MoreVertical, BellOff, Image, Archive, Trash2, ArrowLeft } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import GroupSettingsModal from "./GroupSettingsModal";
@@ -48,11 +48,20 @@ const ChatHeader = () => {
   return (
     <div className="p-4 border-b border-base-300 bg-base-100/80 backdrop-blur-sm shadow-sm relative z-50">
       <div className="flex items-center justify-between">
-        <div
-          className="flex items-center gap-4 cursor-pointer hover:bg-base-200/50 p-1.5 -ml-1.5 rounded-2xl transition-colors"
-          onClick={() => isGroup ? setIsSettingsOpen(true) : setIsUserProfileOpen(true)}
-          title="View profile"
-        >
+        <div className="flex items-center gap-2">
+          {/* Mobile Back Button */}
+          <button 
+            onClick={() => { setSelectedUser(null); setSelectedGroup(null); }} 
+            className="md:hidden p-1.5 rounded-xl hover:bg-base-200 transition-colors mr-1"
+          >
+            <ArrowLeft className="size-5" />
+          </button>
+          
+          <div
+            className="flex items-center gap-4 cursor-pointer hover:bg-base-200/50 p-1.5 -ml-1.5 rounded-2xl transition-colors"
+            onClick={() => isGroup ? setIsSettingsOpen(true) : setIsUserProfileOpen(true)}
+            title="View profile"
+          >
           <div className="avatar relative">
             <div className="size-10 rounded-full border border-base-300 shadow-sm overflow-hidden bg-base-200">
               <img
@@ -90,6 +99,7 @@ const ChatHeader = () => {
               </div>
             )}
           </div>
+        </div>
         </div>
 
         <div className="flex items-center gap-1">

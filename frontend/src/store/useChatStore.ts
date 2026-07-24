@@ -46,6 +46,8 @@ type ChatStore = {
   searchGlobal: (query: string) => Promise<void>;
   setLocalSearchQuery: (query: string) => void;
   setHighlightedMessageId: (id: string | null) => void;
+  activeTab: "users" | "groups" | "calls" | "archived" | "starred";
+  setActiveTab: (tab: "users" | "groups" | "calls" | "archived" | "starred") => void;
 };
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -67,6 +69,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   localSearchQuery: "",
   highlightedMessageId: null,
   starredMessages: [],
+  activeTab: "users",
+
+  setActiveTab: (tab) => set({ activeTab: tab }),
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -177,7 +182,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     if (selectedUser) {
       socket.on("newMessage", (newMessage: any) => {
-        const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+        const senderIdStr = typeof newMessage.senderId === 'object' ? newMessage.senderId._id : newMessage.senderId;
+        const isMessageSentFromSelectedUser = String(senderIdStr) === String(selectedUser._id);
         if (!isMessageSentFromSelectedUser) return;
 
         set({
@@ -188,7 +194,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     if (selectedGroup) {
       socket.on("newGroupMessage", (newMessage: any) => {
-        if (newMessage.groupId !== selectedGroup._id) return;
+        const groupIdStr = typeof newMessage.groupId === 'object' ? newMessage.groupId._id : newMessage.groupId;
+        if (String(groupIdStr) !== String(selectedGroup._id)) return;
         set({
           messages: [...get().messages, newMessage],
         });

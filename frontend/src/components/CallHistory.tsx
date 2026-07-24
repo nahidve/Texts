@@ -97,36 +97,36 @@ const CallHistory = () => {
           };
 
           return (
-            <div key={call._id} className="flex items-center justify-between p-3 hover:bg-base-200/50 rounded-xl transition-colors group">
-              <div className="flex items-center gap-4 cursor-pointer flex-1" onClick={() => initiateCall(otherUser, call.type)}>
+            <div key={call._id} className="flex items-center justify-between p-3 hover:bg-base-200/50 rounded-xl transition-colors group gap-2">
+              <div className="flex items-center gap-3 cursor-pointer flex-1 min-w-0" onClick={() => initiateCall(otherUser, call.type)}>
                 <img 
                   src={otherUser.profilePic || "/avatar.png"} 
                   alt="avatar" 
-                  className="size-12 rounded-full object-cover border border-base-300"
+                  className="size-10 rounded-full object-cover border border-base-300 shrink-0"
                 />
                 
-                <div className="flex flex-col flex-1">
-                  <span className={`font-semibold text-lg ${callColor}`}>
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className={`font-semibold text-sm truncate ${callColor}`}>
                     {otherUser.fullName}
                   </span>
                   
-                  <div className="flex items-center gap-1 text-sm text-base-content/60">
+                  <div className="flex items-center gap-1 text-xs text-base-content/60">
                     {isOutgoing ? (
-                      <PhoneOutgoing className="size-3" />
+                      <PhoneOutgoing className="size-3 shrink-0" />
                     ) : isMissed ? (
-                      <PhoneMissed className="size-3 text-error" />
+                      <PhoneMissed className="size-3 text-error shrink-0" />
                     ) : (
-                      <PhoneIncoming className="size-3" />
+                      <PhoneIncoming className="size-3 shrink-0" />
                     )}
-                    <span>{call.type === "video" ? "Video" : "Voice"}</span>
-                    <span className="mx-1">•</span>
-                    <span>{new Date(call.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="shrink-0 hidden sm:block">{call.type === "video" ? "Video" : "Voice"}</span>
+                    <span className="mx-1 shrink-0 hidden sm:block">•</span>
+                    <span className="truncate">{new Date(call.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                 <span className="text-sm font-medium text-base-content/60 hidden sm:block">
+              <div className="flex items-center gap-2 shrink-0">
+                 <span className="text-xs font-medium text-base-content/60">
                     {formatDuration(call.duration)}
                  </span>
                  <button onClick={() => deleteCall(call._id)} className="btn btn-ghost btn-circle btn-sm opacity-0 group-hover:opacity-100 transition-opacity">
