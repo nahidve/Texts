@@ -143,6 +143,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
     });
 
     socket.on("WEBRTC_SIGNAL", async ({ senderId, signalData, callId }: any) => {
+      console.log(`[Store] Received WEBRTC_SIGNAL (${signalData.type}) from ${senderId}`);
       if (get().callState === "idle") return;
 
       if (callId && !get().callId) {
@@ -150,18 +151,23 @@ export const useCallStore = create<CallStore>((set, get) => ({
       }
 
       if (signalData.type === "offer") {
+        console.log(`[Store] Processing offer from ${senderId}`);
         await webrtcManager.handleOffer(senderId, signalData.offer);
         const answer = await webrtcManager.createAnswer(senderId, signalData.offer);
+        console.log(`[Store] Sending answer to ${senderId}`);
         socket.emit("WEBRTC_SIGNAL", { targetId: senderId, signalData: { type: "answer", answer }, callId: get().callId });
       } else if (signalData.type === "answer") {
+        console.log(`[Store] Processing answer from ${senderId}`);
         await webrtcManager.handleAnswer(senderId, signalData.answer);
       } else if (signalData.type === "ice-candidate") {
+        console.log(`[Store] Processing ICE candidate from ${senderId}`);
         await webrtcManager.handleIceCandidate(senderId, signalData.candidate);
       }
     });
 
     // --- Multi-party Add Participant ---
     socket.on("ADD_PARTICIPANT_INCOMING", ({ inviterId, callerInfo, callId }: any) => {
+      console.log(`[Store] ADD_PARTICIPANT_INCOMING from ${inviterId} for call ${callId}`);
       const { callState } = get();
       if (callState !== "idle") {
         // Automatically reject if busy
@@ -180,9 +186,12 @@ export const useCallStore = create<CallStore>((set, get) => ({
     });
 
     socket.on("CALL_PARTICIPANT_JOINED", async ({ userId, callId }: any) => {
+      console.log(`[Store] CALL_PARTICIPANT_JOINED: ${userId} joined call ${callId}`);
       if (get().callState === "connected" && get().callId === callId) {
         // We are in this call, someone joined! Send them an offer.
+        console.log(`[Store] Initiating offer to new participant ${userId}`);
         const offer = await webrtcManager.createOffer(userId);
+        console.log(`[Store] Sending offer to new participant ${userId}`);
         socket.emit("WEBRTC_SIGNAL", { targetId: userId, signalData: { type: "offer", offer }, callId });
         set({ invitedUsers: get().invitedUsers.filter(id => id !== userId) });
         toast.success("A participant joined the call");
@@ -428,8 +437,10 @@ export const useCallStore = create<CallStore>((set, get) => ({
 
     try {
       // Assuming it joins as audio/video based on the first track, or default to video
+      console.log(`[Store] Accepting participant invite, getting local stream...`);
       const stream = await webrtcManager.getLocalStream(true);
       set({ callState: "connected", localStream: stream, callId: inviteData.callId, callType: "video" });
+      console.log(`[Store] Emitting ADD_PARTICIPANT_ACCEPT for call ${inviteData.callId}`);
       socket.emit("ADD_PARTICIPANT_ACCEPT", { callId: inviteData.callId });
     } catch (error) {
       toast.error("Could not access camera/microphone");

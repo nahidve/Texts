@@ -333,18 +333,23 @@ io.on("connection", (socket) => {
 
     // 6. WebRTC Signaling (SDP Offer/Answer & ICE Candidates)
     socket.on("WEBRTC_SIGNAL", ({ targetId, signalData, callId }) => {
+        const senderId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
+        console.log(`[Socket] WEBRTC_SIGNAL (${signalData.type}) from ${senderId} to ${targetId}`);
         if (userSockets.has(targetId)) {
             io.to(targetId).emit("WEBRTC_SIGNAL", { 
-                senderId: typeof userId === "string" ? userId : socket.handshake.query.userId, 
+                senderId, 
                 signalData,
                 callId
             });
+        } else {
+            console.log(`[Socket] Target ${targetId} is offline for WEBRTC_SIGNAL`);
         }
     });
 
     // --- Add Participants to Call ---
     socket.on("ADD_PARTICIPANT_REQUEST", ({ targetId, callId, callerInfo }) => {
         const inviterId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
+        console.log(`[Socket] ADD_PARTICIPANT_REQUEST from ${inviterId} to ${targetId} for call ${callId}`);
         
         if (userSockets.has(targetId) && !busyUsers.has(targetId)) {
             io.to(targetId).emit("ADD_PARTICIPANT_INCOMING", { 
@@ -353,32 +358,39 @@ io.on("connection", (socket) => {
                 callId 
             });
         } else {
+            console.log(`[Socket] ADD_PARTICIPANT_FAILED for ${targetId} (busy/offline)`);
             io.to(socket.id).emit("ADD_PARTICIPANT_FAILED", { targetId, reason: busyUsers.has(targetId) ? "busy" : "offline" });
         }
     });
 
     socket.on("ADD_PARTICIPANT_ACCEPT", ({ callId }) => {
         const joinerId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
+        console.log(`[Socket] ADD_PARTICIPANT_ACCEPT by ${joinerId} for call ${callId}`);
         busyUsers.add(joinerId);
         
         if (activeCalls.has(callId)) {
             const participants = activeCalls.get(callId)!;
             participants.add(joinerId);
             
+            console.log(`[Socket] Call ${callId} now has participants:`, Array.from(participants));
             // Notify existing participants (excluding joiner)
             participants.forEach(participantId => {
                 if (participantId !== joinerId) {
+                    console.log(`[Socket] Notifying ${participantId} that ${joinerId} joined`);
                     io.to(participantId).emit("CALL_PARTICIPANT_JOINED", { 
                         userId: joinerId,
                         callId 
                     });
                 }
             });
+        } else {
+            console.log(`[Socket] Call ${callId} not found in activeCalls!`);
         }
     });
 
     socket.on("ADD_PARTICIPANT_REJECT", ({ callId, inviterId }) => {
         const rejecterId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
+        console.log(`[Socket] ADD_PARTICIPANT_REJECT by ${rejecterId} for call ${callId}`);
         if (userSockets.has(inviterId)) {
             io.to(inviterId).emit("ADD_PARTICIPANT_REJECTED", { callId, userId: rejecterId });
         }
