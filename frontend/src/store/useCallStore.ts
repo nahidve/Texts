@@ -4,7 +4,7 @@ import { toneGenerator } from "../lib/audio";
 import { useAuthStore } from "./useAuthStore";
 import toast from "react-hot-toast";
 
-type CallState = "idle" | "calling" | "ringing" | "incoming" | "connected";
+type CallState = "idle" | "calling" | "ringing" | "incoming" | "incoming-invite" | "connected";
 
 let callTimeout: any = null;
 
@@ -17,6 +17,8 @@ interface CallStore {
   remoteStreams: Record<string, MediaStream>; // targetId -> MediaStream
   isMicMuted: boolean;
   isVideoMuted: boolean;
+  callId: string | null;
+  inviteData: any | null;
 
   // Actions
   initiateCall: (user: any, type: "audio" | "video", isGroup?: boolean) => Promise<void>;
@@ -30,6 +32,9 @@ interface CallStore {
   cleanup: () => void;
   playRingtone: (type: "incoming" | "outgoing") => void;
   stopRingtone: () => void;
+  inviteParticipant: (userId: string) => void;
+  acceptParticipantInvite: () => void;
+  rejectParticipantInvite: () => void;
 }
 
 export const useCallStore = create<CallStore>((set, get) => ({
@@ -41,6 +46,8 @@ export const useCallStore = create<CallStore>((set, get) => ({
   remoteStreams: {},
   isMicMuted: false,
   isVideoMuted: false,
+  callId: null,
+  inviteData: null,
 
   playRingtone: (type) => {
     if (type === "incoming") {
@@ -70,6 +77,11 @@ export const useCallStore = create<CallStore>((set, get) => ({
     socket.off("GROUP_USER_JOINED");
     socket.off("GROUP_USER_LEFT");
     socket.off("GROUP_WEBRTC_SIGNAL");
+    socket.off("ADD_PARTICIPANT_INCOMING");
+    socket.off("ADD_PARTICIPANT_FAILED");
+    socket.off("ADD_PARTICIPANT_REJECTED");
+    socket.off("CALL_PARTICIPANT_JOINED");
+    socket.off("CALL_PARTICIPANT_LEFT");
 
     socket.on("CALL_INCOMING", ({ callerId, callerInfo, callType }: any) => {
       const { callState } = get();
@@ -91,13 +103,13 @@ export const useCallStore = create<CallStore>((set, get) => ({
       }, 30000);
     });
 
-    socket.on("CALL_ACCEPTED", async ({ receiverId }: any) => {
+    socket.on("CALL_ACCEPTED", async ({ receiverId, callId }: any) => {
       const { callState, remoteUser } = get();
       if (callState !== "calling" || remoteUser?._id !== receiverId) return;
       get().stopRingtone();
-      set({ callState: "connected" });
+      set({ callState: "connected", callId: callId || get().callId });
       const offer = await webrtcManager.createOffer(receiverId);
-      socket.emit("WEBRTC_SIGNAL", { targetId: receiverId, signalData: { type: "offer", offer } });
+      socket.emit("WEBRTC_SIGNAL", { targetId: receiverId, signalData: { type: "offer", offer }, callId: get().callId });
     });
 
     socket.on("CALL_REJECTED", () => {
@@ -128,18 +140,58 @@ export const useCallStore = create<CallStore>((set, get) => ({
       get().cleanup();
     });
 
-    socket.on("WEBRTC_SIGNAL", async ({ senderId, signalData }: any) => {
+    socket.on("WEBRTC_SIGNAL", async ({ senderId, signalData, callId }: any) => {
       if (get().callState === "idle") return;
+
+      if (callId && !get().callId) {
+        set({ callId });
+      }
 
       if (signalData.type === "offer") {
         await webrtcManager.handleOffer(senderId, signalData.offer);
         const answer = await webrtcManager.createAnswer(senderId, signalData.offer);
-        socket.emit("WEBRTC_SIGNAL", { targetId: senderId, signalData: { type: "answer", answer } });
+        socket.emit("WEBRTC_SIGNAL", { targetId: senderId, signalData: { type: "answer", answer }, callId: get().callId });
       } else if (signalData.type === "answer") {
         await webrtcManager.handleAnswer(senderId, signalData.answer);
       } else if (signalData.type === "ice-candidate") {
         await webrtcManager.handleIceCandidate(senderId, signalData.candidate);
       }
+    });
+
+    // --- Multi-party Add Participant ---
+    socket.on("ADD_PARTICIPANT_INCOMING", ({ inviterId, callerInfo, callId }: any) => {
+      const { callState } = get();
+      if (callState !== "idle") {
+        // Automatically reject if busy
+        socket.emit("ADD_PARTICIPANT_REJECT", { callId, inviterId });
+        return;
+      }
+      set({ callState: "incoming-invite", inviteData: { inviterId, callerInfo, callId } });
+      get().playRingtone("incoming");
+    });
+
+    socket.on("CALL_PARTICIPANT_JOINED", async ({ userId, callId }: any) => {
+      if (get().callState === "connected" && get().callId === callId) {
+        // We are in this call, someone joined! Send them an offer.
+        const offer = await webrtcManager.createOffer(userId);
+        socket.emit("WEBRTC_SIGNAL", { targetId: userId, signalData: { type: "offer", offer }, callId });
+        toast.success("A participant joined the call");
+      }
+    });
+
+    socket.on("CALL_PARTICIPANT_LEFT", ({ userId, callId }: any) => {
+      if (get().callState === "connected" && get().callId === callId) {
+        webrtcManager.removePeer(userId);
+        toast.error("A participant left the call");
+      }
+    });
+
+    socket.on("ADD_PARTICIPANT_REJECTED", () => {
+      toast.error("Participant declined the invite");
+    });
+
+    socket.on("ADD_PARTICIPANT_FAILED", ({ reason }: any) => {
+      toast.error(`Could not add participant (${reason})`);
     });
 
     // GROUP SIGNALING
@@ -184,11 +236,11 @@ export const useCallStore = create<CallStore>((set, get) => ({
 
     // WebRTC Manager Callbacks
     webrtcManager.onIceCandidate = (targetId, candidate) => {
-      const { activeGroup } = get();
+      const { activeGroup, callId } = get();
       if (activeGroup) {
         socket.emit("GROUP_WEBRTC_SIGNAL", { targetId, groupId: activeGroup._id, signalData: { type: "ice-candidate", candidate } });
       } else {
-        socket.emit("WEBRTC_SIGNAL", { targetId, signalData: { type: "ice-candidate", candidate } });
+        socket.emit("WEBRTC_SIGNAL", { targetId, signalData: { type: "ice-candidate", candidate }, callId });
       }
     };
 
@@ -223,7 +275,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
           callType: type
         });
       } else {
-        set({ callState: "calling", callType: type, remoteUser: entity, localStream: stream });
+        set({ callState: "calling", callType: type, remoteUser: entity, localStream: stream, callId: authUser._id });
         socket.emit("CALL_INITIATE", {
           receiverId: entity._id,
           callerInfo: { fullName: authUser.fullName, profilePic: authUser.profilePic },
@@ -257,6 +309,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
       if (activeGroup) {
         socket.emit("JOIN_GROUP_CALL", { groupId: activeGroup._id });
       } else if (remoteUser) {
+        set({ callId: remoteUser._id }); // Remote user initiated it, so their ID is the callId
         socket.emit("CALL_ACCEPT", { callerId: remoteUser._id });
       }
     } catch (error) {
@@ -288,15 +341,15 @@ export const useCallStore = create<CallStore>((set, get) => ({
   endCall: () => {
     get().stopRingtone();
     const socket = useAuthStore.getState().socket;
-    const { remoteUser, activeGroup, callType } = get();
+    const { remoteUser, activeGroup, callType, callId } = get();
 
     const dummyDuration = Math.floor(Math.random() * 100);
 
     if (socket) {
       if (activeGroup) {
         socket.emit("LEAVE_GROUP_CALL", { groupId: activeGroup._id, duration: dummyDuration, callType });
-      } else if (remoteUser) {
-        socket.emit("CALL_END", { targetId: remoteUser._id, duration: dummyDuration, callType });
+      } else if (remoteUser || callId) {
+        socket.emit("CALL_END", { targetId: remoteUser?._id, duration: dummyDuration, callType, callId });
       }
     }
     get().cleanup();
@@ -330,6 +383,49 @@ export const useCallStore = create<CallStore>((set, get) => ({
       remoteStreams: {},
       isMicMuted: false,
       isVideoMuted: false,
+      callId: null,
+      inviteData: null,
     });
+  },
+
+  inviteParticipant: (userId: string) => {
+    const socket = useAuthStore.getState().socket;
+    const { authUser } = useAuthStore.getState();
+    const { callId } = get();
+    if (socket && callId && authUser) {
+      socket.emit("ADD_PARTICIPANT_REQUEST", {
+        targetId: userId,
+        callId,
+        callerInfo: { fullName: authUser.fullName, profilePic: authUser.profilePic }
+      });
+      toast.success("Invitation sent");
+    }
+  },
+
+  acceptParticipantInvite: async () => {
+    get().stopRingtone();
+    const socket = useAuthStore.getState().socket;
+    const { inviteData } = get();
+    if (!socket || !inviteData) return;
+
+    try {
+      // Assuming it joins as audio/video based on the first track, or default to video
+      const stream = await webrtcManager.getLocalStream(true);
+      set({ callState: "connected", localStream: stream, callId: inviteData.callId, callType: "video" });
+      socket.emit("ADD_PARTICIPANT_ACCEPT", { callId: inviteData.callId });
+    } catch (error) {
+      toast.error("Could not access camera/microphone");
+      get().rejectParticipantInvite();
+    }
+  },
+
+  rejectParticipantInvite: () => {
+    get().stopRingtone();
+    const socket = useAuthStore.getState().socket;
+    const { inviteData } = get();
+    if (socket && inviteData) {
+      socket.emit("ADD_PARTICIPANT_REJECT", { callId: inviteData.callId, inviterId: inviteData.inviterId });
+    }
+    get().cleanup();
   }
 }));

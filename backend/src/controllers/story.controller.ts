@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import Story from "../models/story.model";
-import cloudinary from "../lib/cloudinary";
-import { getReceiverSocketId, io } from "../lib/socket";
+import Story from "../models/story.model.js";
+import cloudinary from "../lib/cloudinary.js";
+import { getReceiverSocketId, io } from "../lib/socket.js";
 
 // Upload a new story
 export const uploadStory = async (req: Request, res: Response) => {
@@ -128,7 +128,7 @@ export const reactToStory = async (req: Request, res: Response) => {
     }
 
     // Check if user already reacted
-    const existingReaction = story.reactions.find(r => r.userId.toString() === userId.toString());
+    const existingReaction = story.reactions.find((r: any) => r.userId.toString() === userId.toString());
     
     if (existingReaction) {
       existingReaction.emoji = emoji;
@@ -144,7 +144,7 @@ export const reactToStory = async (req: Request, res: Response) => {
     if (authorSocketId) {
       io.to(authorSocketId).emit("storyReacted", { 
         storyId: id, 
-        reaction: story.reactions.find(r => r.userId._id.toString() === userId.toString()) 
+        reaction: story.reactions.find((r: any) => r.userId._id.toString() === userId.toString()) 
       });
     }
 

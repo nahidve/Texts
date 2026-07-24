@@ -26,6 +26,9 @@ const busyUsers = new Set<string>();
 // Track active group calls: GroupId -> Set of UserIds
 const activeGroupCalls = new Map<string, Set<string>>();
 
+// Track active 1-on-1 / multi-party calls: CallId (Original CallerId) -> Set of UserIds
+const activeCalls = new Map<string, Set<string>>();
+
 export function getReceiverSocketId(userId: string) {
     const sockets = userSockets.get(userId);
     if (sockets) return Array.from(sockets);
@@ -183,11 +186,20 @@ io.on("connection", (socket) => {
 
     // 2. Accept Call
     socket.on("CALL_ACCEPT", ({ callerId }) => {
+        const receiverId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         if (typeof userId === "string") busyUsers.add(userId);
+        
+        if (!activeCalls.has(callerId)) {
+            activeCalls.set(callerId, new Set([callerId, receiverId]));
+        } else {
+            activeCalls.get(callerId)!.add(receiverId);
+        }
+
         if (userSockets.has(callerId)) {
             busyUsers.add(callerId);
             io.to(callerId).emit("CALL_ACCEPTED", { 
-                receiverId: typeof userId === "string" ? userId : socket.handshake.query.userId 
+                receiverId,
+                callId: callerId
             });
         }
     });
@@ -249,11 +261,27 @@ io.on("connection", (socket) => {
     });
 
     // 5. End Call
-    socket.on("CALL_END", async ({ targetId, duration, callType }) => {
+    socket.on("CALL_END", async ({ targetId, duration, callType, callId }) => {
         const currentUserId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         
         if (typeof userId === "string") busyUsers.delete(userId);
         if (targetId) busyUsers.delete(targetId);
+
+        // Remove from activeCalls
+        const activeCallId = callId || currentUserId;
+        if (activeCalls.has(activeCallId)) {
+            const participants = activeCalls.get(activeCallId)!;
+            participants.delete(currentUserId);
+            
+            // Notify others that someone left
+            participants.forEach(pId => {
+                io.to(pId).emit("CALL_PARTICIPANT_LEFT", { userId: currentUserId, callId: activeCallId });
+            });
+
+            if (participants.size === 0 || (participants.size === 1 && !callId)) {
+                activeCalls.delete(activeCallId);
+            }
+        }
 
         // Save call
         await new Call({
@@ -281,12 +309,54 @@ io.on("connection", (socket) => {
     });
 
     // 6. WebRTC Signaling (SDP Offer/Answer & ICE Candidates)
-    socket.on("WEBRTC_SIGNAL", ({ targetId, signalData }) => {
+    socket.on("WEBRTC_SIGNAL", ({ targetId, signalData, callId }) => {
         if (userSockets.has(targetId)) {
             io.to(targetId).emit("WEBRTC_SIGNAL", { 
                 senderId: typeof userId === "string" ? userId : socket.handshake.query.userId, 
-                signalData 
+                signalData,
+                callId
             });
+        }
+    });
+
+    // --- Add Participants to Call ---
+    socket.on("ADD_PARTICIPANT_REQUEST", ({ targetId, callId, callerInfo }) => {
+        const inviterId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
+        
+        if (userSockets.has(targetId) && !busyUsers.has(targetId)) {
+            io.to(targetId).emit("ADD_PARTICIPANT_INCOMING", { 
+                inviterId, 
+                callerInfo,
+                callId 
+            });
+        } else {
+            io.to(socket.id).emit("ADD_PARTICIPANT_FAILED", { targetId, reason: busyUsers.has(targetId) ? "busy" : "offline" });
+        }
+    });
+
+    socket.on("ADD_PARTICIPANT_ACCEPT", ({ callId }) => {
+        const joinerId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
+        busyUsers.add(joinerId);
+        
+        if (activeCalls.has(callId)) {
+            const participants = activeCalls.get(callId)!;
+            participants.add(joinerId);
+            
+            // Notify existing participants (excluding joiner)
+            participants.forEach(participantId => {
+                if (participantId !== joinerId) {
+                    io.to(participantId).emit("CALL_PARTICIPANT_JOINED", { 
+                        userId: joinerId,
+                        callId 
+                    });
+                }
+            });
+        }
+    });
+
+    socket.on("ADD_PARTICIPANT_REJECT", ({ callId, inviterId }) => {
+        if (userSockets.has(inviterId)) {
+            io.to(inviterId).emit("ADD_PARTICIPANT_REJECTED", { callId });
         }
     });
 
@@ -380,6 +450,19 @@ io.on("connection", (socket) => {
                     });
                     if (participants.size === 0) {
                         activeGroupCalls.delete(groupId);
+                    }
+                }
+            });
+
+            // Remove from any multiparty ad-hoc calls
+            activeCalls.forEach((participants, callId) => {
+                if (participants.has(userId)) {
+                    participants.delete(userId);
+                    participants.forEach(pId => {
+                        io.to(pId).emit("CALL_PARTICIPANT_LEFT", { userId, callId });
+                    });
+                    if (participants.size === 0 || (participants.size === 1 && !callId)) {
+                        activeCalls.delete(callId);
                     }
                 }
             });
