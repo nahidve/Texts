@@ -3,8 +3,6 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useChatStore } from '../store/useChatStore';
 import { useNotificationStore } from '../store/useNotificationStore';
 
-// A valid base64 wav for a subtle "pop" sound
-const VALID_POP_SOUND = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="; // Empty silent stub, wait, let me use a tiny beep
 // Actually, here is a small synthetic beep using base64:
 const BEEP_SOUND = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAD//w==";
 
@@ -72,7 +70,7 @@ const NotificationManager = () => {
     const onNewGroupMessage = (msg: any) => handleNewMessage(msg, true);
     
     // Reaction & Story Handlers
-    const onReaction = (data: any) => {
+    const onReaction = () => {
       // Data from messageUpdated or storyReacted
       if (!mentionsOnly) {
         if (soundEnabled && audioRef.current) audioRef.current.play().catch(()=>{});
