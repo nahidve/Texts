@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Image, Send, X, BarChart2, Check, XCircle, Smile, Mic, Trash2, Pause, Play, BellOff, Clock, Paperclip } from "lucide-react";
+import { Image, Send, X, BarChart2, Check, XCircle, Smile, Mic, Trash2, Pause, Play, BellOff, Clock, Paperclip, Sticker } from "lucide-react";
 import toast from "react-hot-toast";
 import CreatePollModal from "./CreatePollModal";
-import EmojiPicker from 'emoji-picker-react';
+import MediaPicker from "./MediaPicker";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
@@ -22,7 +22,7 @@ const MessageInput = () => {
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionCursor, setMentionCursor] = useState(0);
   const [showPollModal, setShowPollModal] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [isSilent, setIsSilent] = useState(false);
   const [scheduledFor, setScheduledFor] = useState("");
   const [audioPreview, setAudioPreview] = useState<string | null>(null);
@@ -315,7 +315,7 @@ const MessageInput = () => {
       setAudioPreview(null);
       setIsSilent(false);
       setScheduledFor("");
-      setShowEmojiPicker(false);
+      setShowMediaPicker(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (fileInputRef2.current) fileInputRef2.current.value = "";
 
@@ -328,6 +328,31 @@ const MessageInput = () => {
       }
     } catch (error) {
       console.error("Failed to send message:", error);
+    }
+  };
+
+  const handleMediaSelect = async (url: string, type: 'gif' | 'sticker' | 'emoji') => {
+    if (type === 'emoji') {
+      setText(prev => prev + url);
+      return;
+    }
+    
+    // For GIFs and Stickers, send immediately as an image
+    try {
+      await sendMessage({
+        text: "",
+        image: url,
+        replyTo: replyingToMessage?._id,
+        isSilent,
+        scheduledFor
+      });
+      setShowMediaPicker(false);
+      setReplyingToMessage(null);
+      setIsSilent(false);
+      setScheduledFor("");
+    } catch (error) {
+      console.error("Failed to send media:", error);
+      toast.error(`Failed to send ${type}`);
     }
   };
 
@@ -462,16 +487,12 @@ const MessageInput = () => {
         </div>
       )}
 
-      {/* Emoji Picker Popup */}
-      {showEmojiPicker && !editingMessage && (
-        <div className="absolute bottom-full right-4 mb-2 z-50 shadow-2xl rounded-2xl overflow-hidden border border-base-300">
-          <EmojiPicker
-            onEmojiClick={(emojiData) => {
-              setText(prev => prev + emojiData.emoji);
-            }}
-            theme={"dark" as any}
-          />
-        </div>
+      {/* Media Picker Popup (GIFs, Stickers, Emojis) */}
+      {showMediaPicker && !editingMessage && (
+        <MediaPicker 
+          onSelect={handleMediaSelect}
+          onClose={() => setShowMediaPicker(false)}
+        />
       )}
 
       {/* Reply Banner */}
@@ -619,15 +640,15 @@ const MessageInput = () => {
           </button>
         )}
 
-        {/* Emoji Button */}
+        {/* Media (GIF/Sticker/Emoji) Button */}
         {!editingMessage && (
           <button
             type="button"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${showEmojiPicker ? "text-primary" : "text-zinc-400"}`}
-            title="Emojis"
+            onClick={() => setShowMediaPicker(!showMediaPicker)}
+            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${showMediaPicker ? "text-primary" : "text-zinc-400"}`}
+            title="GIFs & Stickers"
           >
-            <Smile size={22} />
+            <Sticker size={22} />
           </button>
         )}
 
