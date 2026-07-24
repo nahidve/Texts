@@ -112,7 +112,7 @@ const messageSchema = new mongoose.Schema({
     callEvent: {
         status: String, // e.g., "missed", "ended", "rejected", "cancelled", "busy"
         callType: String, // "audio" or "video"
-        duration: { type: Number, default: 0 }
+        duration: Number
     },
     deletedFor: [{
         type: mongoose.Schema.Types.ObjectId,
