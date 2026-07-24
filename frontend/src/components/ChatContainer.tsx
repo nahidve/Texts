@@ -162,8 +162,11 @@ const ChatContainer = () => {
                       <span className="text-xs font-semibold text-primary pl-1">{senderInfo.name}</span>
                     )}
                     <div
-                      className={`rounded-xl shadow-sm break-words whitespace-pre-wrap relative ${isMe ? "bg-primary text-primary-content rounded-br-none" : "bg-base-100 border border-base-300 rounded-bl-none"
-                        } ${message.isPinned ? "ring-2 ring-primary/50" : ""} ${message.audio && !message.text ? "p-0 shadow-none border-none bg-transparent" : "px-4 py-2"}`}
+                      className={`px-4 py-2.5 rounded-2xl border shadow-sm break-words whitespace-pre-wrap relative text-[15px] ${
+                        isMe 
+                          ? "rounded-br-sm bg-gradient-to-br from-fuchsia-500 to-cyan-500 text-white border-transparent shadow-cyan-500/20" 
+                          : "rounded-bl-sm bg-white/80 border-white/60 text-slate-800 backdrop-blur-sm"
+                      } ${message.isPinned ? "ring-2 ring-yellow-400" : ""} ${message.audio && !message.text ? "p-0 shadow-none border-none bg-transparent" : ""}`}
                     >
                       {/* Hover Actions */}
                       <div className={`absolute -top-3 ${isMe ? "-left-20" : "-right-20"} hidden group-hover:flex items-center gap-0.5 bg-base-200 border border-base-300 rounded-lg shadow-md p-1 z-10`}>

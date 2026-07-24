@@ -105,83 +105,83 @@ const Sidebar = () => {
   if (isUsersLoading || isGroupsLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className="h-full w-20 lg:w-80 flex flex-col transition-all duration-200 relative bg-gradient-to-br from-[#232526]/80 via-[#2c3e50]/80 to-[#485563]/90 shadow-2xl overflow-hidden backdrop-blur-xl">
-      {/* Neon vertical accent bar */}
-      <div className="absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b from-primary via-accent to-secondary animate-neon-bar z-20" />
-      {/* Glassy card effect */}
-      <div className="absolute inset-0 bg-white/5 pointer-events-none" />
-      <div className="relative z-10 border-b border-base-300 w-full p-4 flex flex-col gap-2">
-        <div className="flex overflow-x-auto hide-scrollbar gap-1 bg-base-300/50 rounded-lg p-1">
+    <aside className="h-full w-20 lg:w-80 flex flex-col transition-all duration-200 relative bg-white/40 shadow-xl overflow-hidden backdrop-blur-xl border-r border-white/60">
+      {/* Playful accent bar */}
+      <div className="absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b from-fuchsia-400 via-cyan-400 to-yellow-400 z-20" />
+      
+      <div className="relative z-10 border-b border-white/60 w-full p-4 flex flex-col gap-2">
+        <div className="flex overflow-x-auto hide-scrollbar gap-1 bg-white/50 rounded-xl p-1 shadow-sm border border-white/60">
           <button
             onClick={() => setActiveTab("users")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all ${activeTab === 'users' ? 'bg-primary text-primary-content shadow-md' : 'text-zinc-400 hover:text-white hover:bg-base-300'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'users' ? 'bg-white text-cyan-600 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
             title="Contacts"
           >
             <Users className="size-4" />
-            <span className={`font-medium text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'users' ? 'max-w-20 opacity-100' : 'max-w-0 opacity-0'}`}>Contacts</span>
+            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'users' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Contacts</span>
           </button>
           <button
             onClick={() => setActiveTab("groups")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all ${activeTab === 'groups' ? 'bg-primary text-primary-content shadow-md' : 'text-zinc-400 hover:text-white hover:bg-base-300'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'groups' ? 'bg-white text-fuchsia-600 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
             title="Groups"
           >
             <UsersIcon className="size-4" />
-            <span className={`font-medium text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'groups' ? 'max-w-20 opacity-100' : 'max-w-0 opacity-0'}`}>Groups</span>
+            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'groups' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Groups</span>
           </button>
           <button
             onClick={() => setActiveTab("archived")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all ${activeTab === 'archived' ? 'bg-primary text-primary-content shadow-md' : 'text-zinc-400 hover:text-white hover:bg-base-300'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'archived' ? 'bg-white text-yellow-500 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
             title="Archived"
           >
             <Archive className="size-4" />
-            <span className={`font-medium text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'archived' ? 'max-w-20 opacity-100' : 'max-w-0 opacity-0'}`}>Archived</span>
+            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'archived' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Archived</span>
           </button>
           <button
             onClick={() => setActiveTab("starred")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all ${activeTab === 'starred' ? 'bg-primary text-primary-content shadow-md' : 'text-zinc-400 hover:text-white hover:bg-base-300'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'starred' ? 'bg-white text-orange-500 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
             title="Starred"
           >
             <Star className="size-4" />
-            <span className={`font-medium text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'starred' ? 'max-w-20 opacity-100' : 'max-w-0 opacity-0'}`}>Starred</span>
+            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'starred' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Starred</span>
           </button>
           <button
             onClick={() => setActiveTab("calls")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md transition-all ${activeTab === 'calls' ? 'bg-primary text-primary-content shadow-md' : 'text-zinc-400 hover:text-white hover:bg-base-300'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'calls' ? 'bg-white text-emerald-500 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
+            title="Calls"
           >
             <PhoneCall className="size-5" />
-            <span className="font-semibold hidden lg:block">Calls</span>
+            <span className={`text-xs hidden lg:block overflow-hidden transition-all duration-300 ${activeTab === 'calls' ? 'max-w-20 opacity-100 font-bold' : 'max-w-0 opacity-0'}`}>Calls</span>
           </button>
         </div>
 
         {activeTab !== "calls" && (
-          <div className="relative mt-1 hidden lg:block">
-            <Search className="absolute left-2.5 top-2 size-4 text-zinc-400" />
+          <div className="relative mt-2 hidden lg:block">
+            <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
             <input
               type="text"
               placeholder={activeTab === "users" ? "Search contacts..." : "Search groups..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input input-sm w-full pl-9 bg-base-300/50 border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-lg text-white placeholder-zinc-400"
+              className="w-full h-10 pl-10 bg-white/60 border border-white/80 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20 rounded-xl text-slate-800 placeholder-slate-400 outline-none transition-all shadow-sm"
             />
           </div>
         )}
 
         {activeTab === 'users' ? (
           <div className="mt-3 flex items-center gap-3">
-            <label className="cursor-pointer flex items-center gap-2 px-2 py-1 rounded-lg bg-base-200/40 hover:bg-base-200/70 transition-all">
+            <label className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/50 hover:bg-white/80 transition-all border border-white/60 shadow-sm">
               <input
                 type="checkbox"
                 checked={showOnlineOnly}
                 onChange={(e) => setShowOnlineOnly(e.target.checked)}
-                className="checkbox checkbox-xs accent-primary"
+                className="w-4 h-4 text-cyan-500 bg-white border-slate-300 rounded focus:ring-cyan-500"
               />
-              <span className="text-xs text-white/80 font-medium">Show online only</span>
+              <span className="text-xs text-slate-700 font-bold tracking-wide">Online only</span>
             </label>
-            <span className="text-xs text-accent font-semibold animate-pulse">({Math.max(0, onlineUsers.length - 1)} online)</span>
+            <span className="text-xs text-cyan-600 font-bold bg-cyan-100 px-2 py-0.5 rounded-full">{Math.max(0, onlineUsers.length - 1)}</span>
           </div>
         ) : activeTab === 'groups' ? (
           <div className="mt-3 flex items-center justify-between">
-            <button onClick={() => setIsCreateGroupOpen(true)} className="flex items-center gap-2 px-2 py-1 rounded-lg bg-base-200/40 hover:bg-base-200/70 transition-all text-white/80 text-xs font-medium">
+            <button onClick={() => setIsCreateGroupOpen(true)} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-fuchsia-50 hover:bg-fuchsia-100 transition-all text-fuchsia-600 text-xs font-bold border border-fuchsia-200 shadow-sm">
               <PlusCircle className="size-4" />
               <span className="hidden lg:block">Create Group</span>
             </button>
@@ -268,10 +268,8 @@ const Sidebar = () => {
                 )}
               </div>
             ) : activeTab === "calls" ? (
-          <CallHistory />
-            ) : activeTab === "calls" ? (
               <CallHistory />
-        ) : activeTab === "users" ? (
+            ) : activeTab === "users" ? (
               <>
                 {sortedUsers.map((user) => {
                   const isPinned = isIdInArray(authUser?.pinnedChats, user._id);
@@ -281,12 +279,12 @@ const Sidebar = () => {
                     <div
                       key={user._id}
                       className={`
-                    w-full flex items-center gap-3 px-3 py-2 rounded-2xl transition-all duration-200
-                    group relative shadow-sm cursor-pointer
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200
+                    group relative cursor-pointer border
                     ${isMenuOpen ? 'z-50' : 'z-0'}
                     ${selectedUser?._id === user._id
-                          ? "bg-gradient-to-r from-primary/30 via-accent/20 to-secondary/30 ring-2 ring-primary/60 scale-[1.03] shadow-lg"
-                          : "hover:bg-base-200/60 hover:scale-[1.01]"}
+                          ? "bg-white border-cyan-200 shadow-md scale-[1.02]"
+                          : "bg-transparent border-transparent hover:bg-white/60 hover:border-white hover:shadow-sm"}
                   `}
                       onClick={() => setSelectedUser(user)}
                     >
@@ -294,10 +292,10 @@ const Sidebar = () => {
                         <img
                           src={user.profilePic || "/avatar.png"}
                           alt={user.fullName}
-                          className={`size-12 object-cover rounded-full border-2 ${selectedUser?._id === user._id ? "border-primary shadow-primary/40" : "border-base-300"}`}
+                          className={`size-12 object-cover rounded-full border-2 ${selectedUser?._id === user._id ? "border-cyan-400" : "border-white shadow-sm"}`}
                         />
                         {onlineUsers.includes(user._id) && (
-                          <span className="absolute bottom-1 right-1 size-3 bg-gradient-to-br from-green-400 via-green-500 to-emerald-400 rounded-full ring-2 ring-zinc-900 animate-pulse-glow" />
+                          <span className="absolute bottom-0 right-0 size-3.5 bg-green-400 border-2 border-white rounded-full" />
                         )}
                       </div>
                       <div className="hidden lg:block text-left min-w-0 flex-1">
@@ -377,12 +375,12 @@ const Sidebar = () => {
                     <div
                       key={group._id}
                       className={`
-                    w-full flex items-center gap-3 px-3 py-2 rounded-2xl transition-all duration-200
-                    group relative shadow-sm cursor-pointer
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200
+                    group relative cursor-pointer border
                     ${isMenuOpen ? 'z-50' : 'z-0'}
                     ${selectedGroup?._id === group._id
-                          ? "bg-gradient-to-r from-primary/30 via-accent/20 to-secondary/30 ring-2 ring-primary/60 scale-[1.03] shadow-lg"
-                          : "hover:bg-base-200/60 hover:scale-[1.01]"}
+                          ? "bg-white border-fuchsia-200 shadow-md scale-[1.02]"
+                          : "bg-transparent border-transparent hover:bg-white/60 hover:border-white hover:shadow-sm"}
                   `}
                       onClick={() => setSelectedGroup(group)}
                     >
@@ -390,7 +388,7 @@ const Sidebar = () => {
                         <img
                           src={group.avatar || "/avatar.png"}
                           alt={group.name}
-                          className={`size-12 object-cover rounded-full border-2 ${selectedGroup?._id === group._id ? "border-primary shadow-primary/40" : "border-base-300"}`}
+                          className={`size-12 object-cover rounded-full border-2 ${selectedGroup?._id === group._id ? "border-fuchsia-400" : "border-white shadow-sm"}`}
                         />
                       </div>
                       <div className="hidden lg:block text-left min-w-0 flex-1">
