@@ -141,7 +141,7 @@ const CreateGroupModal = ({ onClose }: CreateGroupModalProps) => {
                 <span className="flex-1 font-medium text-sm">{user.fullName}</span>
               </label>
             ))}
-            {users.length === 0 && <p className="text-xs text-center text-zinc-500">No users found.</p>}
+            {users.length === 0 && <p className="text-xs text-center text-base-content/60">No users found.</p>}
           </div>
         </div>
 

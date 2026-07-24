@@ -220,7 +220,7 @@ const GroupSettingsModal = ({ onClose }: GroupSettingsModalProps) => {
                           <span className="text-sm">{u.fullName}</span>
                         </label>
                       ))}
-                      {nonMembers.length === 0 && <p className="text-xs text-zinc-500 text-center py-2">No other users found.</p>}
+                      {nonMembers.length === 0 && <p className="text-xs text-base-content/60 text-center py-2">No other users found.</p>}
                     </div>
                     <div className="flex justify-end gap-2 mt-2">
                       <button className="btn btn-xs btn-ghost" onClick={() => setShowAddMembers(false)}>Cancel</button>
@@ -240,7 +240,7 @@ const GroupSettingsModal = ({ onClose }: GroupSettingsModalProps) => {
                       <img src={m.user.profilePic || "/avatar.png"} alt="avatar" className="size-10 rounded-full object-cover border border-base-300" />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{m.user.fullName} {m.user._id === authUser?._id && <span className="text-xs text-primary ml-1">(You)</span>}</p>
-                        <p className="text-xs text-zinc-500 capitalize">{m.role}</p>
+                        <p className="text-xs text-base-content/60 capitalize">{m.role}</p>
                       </div>
                       
                       {isAdminOrOwner && m.user._id !== authUser?._id && m.role !== "owner" && (
@@ -250,7 +250,7 @@ const GroupSettingsModal = ({ onClose }: GroupSettingsModalProps) => {
                       )}
                     </div>
                   ))}
-                  {filteredMembers.length === 0 && <p className="text-center text-zinc-500 text-sm py-4">No members found.</p>}
+                  {filteredMembers.length === 0 && <p className="text-center text-base-content/60 text-sm py-4">No members found.</p>}
                 </div>
               </div>
             )}

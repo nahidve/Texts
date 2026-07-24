@@ -265,7 +265,9 @@ io.on("connection", (socket) => {
         const currentUserId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         
         if (typeof userId === "string") busyUsers.delete(userId);
-        if (targetId) busyUsers.delete(targetId);
+
+        let shouldEndCallForEveryone = false;
+        let remainingParticipants = new Set<string>();
 
         // Remove from activeCalls
         const activeCallId = callId || currentUserId;
@@ -273,38 +275,59 @@ io.on("connection", (socket) => {
             const participants = activeCalls.get(activeCallId)!;
             participants.delete(currentUserId);
             
+            remainingParticipants = new Set(participants);
+
             // Notify others that someone left
             participants.forEach(pId => {
                 io.to(pId).emit("CALL_PARTICIPANT_LEFT", { userId: currentUserId, callId: activeCallId });
             });
 
-            if (participants.size === 0 || (participants.size === 1 && !callId)) {
+            if (participants.size <= 1) {
                 activeCalls.delete(activeCallId);
+                shouldEndCallForEveryone = true;
+            }
+        } else {
+            shouldEndCallForEveryone = true;
+        }
+
+        // Save call log message
+        if (targetId) {
+            try {
+                await new Call({
+                    callerId: currentUserId,
+                    receiverId: targetId,
+                    type: callType || "audio",
+                    status: "ended",
+                    duration: duration || 0,
+                    participants: [currentUserId, targetId]
+                }).save();
+
+                const msg = await new Message({
+                    senderId: currentUserId,
+                    receiverId: targetId,
+                    callEvent: { status: "ended", callType: callType || "audio", duration: duration || 0 }
+                }).save();
+
+                if (userSockets.has(targetId)) {
+                    io.to(targetId).emit("newMessage", msg);
+                }
+                if (userSockets.has(currentUserId)) {
+                    io.to(currentUserId).emit("newMessage", msg);
+                }
+            } catch (err) {
+                console.error("Error saving call log on end:", err);
             }
         }
 
-        // Save call
-        await new Call({
-            callerId: currentUserId,
-            receiverId: targetId,
-            type: callType || "audio",
-            status: "ended",
-            duration: duration || 0,
-            participants: [currentUserId, targetId]
-        }).save();
-
-        const msg = await new Message({
-            senderId: currentUserId,
-            receiverId: targetId,
-            callEvent: { status: "ended", callType: callType || "audio", duration: duration || 0 }
-        }).save();
-
-        if (userSockets.has(targetId)) {
-            io.to(targetId).emit("CALL_ENDED", { enderId: currentUserId });
-            io.to(targetId).emit("newMessage", msg);
-        }
-        if (userSockets.has(currentUserId)) {
-            io.to(currentUserId).emit("newMessage", msg);
+        if (shouldEndCallForEveryone) {
+            remainingParticipants.forEach(pId => {
+                if (userSockets.has(pId)) {
+                    io.to(pId).emit("CALL_ENDED", { enderId: currentUserId });
+                }
+            });
+            if (targetId && !remainingParticipants.has(targetId) && userSockets.has(targetId)) {
+                io.to(targetId).emit("CALL_ENDED", { enderId: currentUserId });
+            }
         }
     });
 
@@ -355,8 +378,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("ADD_PARTICIPANT_REJECT", ({ callId, inviterId }) => {
+        const rejecterId = typeof userId === "string" ? userId : socket.handshake.query.userId as string;
         if (userSockets.has(inviterId)) {
-            io.to(inviterId).emit("ADD_PARTICIPANT_REJECTED", { callId });
+            io.to(inviterId).emit("ADD_PARTICIPANT_REJECTED", { callId, userId: rejecterId });
         }
     });
 
@@ -461,8 +485,11 @@ io.on("connection", (socket) => {
                     participants.forEach(pId => {
                         io.to(pId).emit("CALL_PARTICIPANT_LEFT", { userId, callId });
                     });
-                    if (participants.size === 0 || (participants.size === 1 && !callId)) {
+                    if (participants.size <= 1) {
                         activeCalls.delete(callId);
+                        participants.forEach(pId => {
+                            io.to(pId).emit("CALL_ENDED", { enderId: userId });
+                        });
                     }
                 }
             });

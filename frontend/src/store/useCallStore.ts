@@ -19,6 +19,7 @@ interface CallStore {
   isVideoMuted: boolean;
   callId: string | null;
   inviteData: any | null;
+  invitedUsers: string[];
 
   // Actions
   initiateCall: (user: any, type: "audio" | "video", isGroup?: boolean) => Promise<void>;
@@ -48,6 +49,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
   isVideoMuted: false,
   callId: null,
   inviteData: null,
+  invitedUsers: [],
 
   playRingtone: (type) => {
     if (type === "incoming") {
@@ -168,6 +170,13 @@ export const useCallStore = create<CallStore>((set, get) => ({
       }
       set({ callState: "incoming-invite", inviteData: { inviterId, callerInfo, callId } });
       get().playRingtone("incoming");
+
+      if (callTimeout) clearTimeout(callTimeout);
+      callTimeout = setTimeout(() => {
+        if (get().callState === "incoming-invite") {
+          get().rejectParticipantInvite();
+        }
+      }, 30000);
     });
 
     socket.on("CALL_PARTICIPANT_JOINED", async ({ userId, callId }: any) => {
@@ -175,6 +184,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
         // We are in this call, someone joined! Send them an offer.
         const offer = await webrtcManager.createOffer(userId);
         socket.emit("WEBRTC_SIGNAL", { targetId: userId, signalData: { type: "offer", offer }, callId });
+        set({ invitedUsers: get().invitedUsers.filter(id => id !== userId) });
         toast.success("A participant joined the call");
       }
     });
@@ -186,11 +196,17 @@ export const useCallStore = create<CallStore>((set, get) => ({
       }
     });
 
-    socket.on("ADD_PARTICIPANT_REJECTED", () => {
+    socket.on("ADD_PARTICIPANT_REJECTED", ({ userId }: any) => {
+      if (userId) {
+        set({ invitedUsers: get().invitedUsers.filter(id => id !== userId) });
+      }
       toast.error("Participant declined the invite");
     });
 
-    socket.on("ADD_PARTICIPANT_FAILED", ({ reason }: any) => {
+    socket.on("ADD_PARTICIPANT_FAILED", ({ targetId, reason }: any) => {
+      if (targetId) {
+        set({ invitedUsers: get().invitedUsers.filter(id => id !== targetId) });
+      }
       toast.error(`Could not add participant (${reason})`);
     });
 
@@ -385,6 +401,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
       isVideoMuted: false,
       callId: null,
       inviteData: null,
+      invitedUsers: [],
     });
   },
 
@@ -398,6 +415,7 @@ export const useCallStore = create<CallStore>((set, get) => ({
         callId,
         callerInfo: { fullName: authUser.fullName, profilePic: authUser.profilePic }
       });
+      set({ invitedUsers: [...get().invitedUsers, userId] });
       toast.success("Invitation sent");
     }
   },

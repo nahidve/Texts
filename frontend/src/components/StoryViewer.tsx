@@ -127,7 +127,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ userGroups, initialGroupIndex
     <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center">
       
       {/* Main Container */}
-      <div className="relative w-full max-w-md h-[100dvh] sm:h-[90vh] bg-zinc-900 sm:rounded-2xl overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-md h-[100dvh] sm:h-[90vh] bg-base-200 sm:rounded-2xl overflow-hidden flex flex-col">
         
         {/* Progress Bars */}
         <div className="absolute top-0 left-0 w-full p-3 flex gap-1 z-20 bg-gradient-to-b from-black/50 to-transparent">

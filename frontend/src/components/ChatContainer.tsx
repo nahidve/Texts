@@ -165,13 +165,13 @@ const ChatContainer = () => {
                       className={`px-4 py-2.5 rounded-2xl border shadow-sm break-words whitespace-pre-wrap relative text-[15px] ${
                         isMe 
                           ? "rounded-br-sm bg-gradient-to-br from-fuchsia-500 to-cyan-500 text-white border-transparent shadow-cyan-500/20" 
-                          : "rounded-bl-sm bg-white/80 border-white/60 text-slate-800 backdrop-blur-sm"
+                          : "rounded-bl-sm glass-panel text-base-content border-base-300"
                       } ${message.isPinned ? "ring-2 ring-yellow-400" : ""} ${message.audio && !message.text ? "p-0 shadow-none border-none bg-transparent" : ""}`}
                     >
                       {/* Hover Actions */}
                       <div className={`absolute -top-3 ${isMe ? "-left-20" : "-right-20"} hidden group-hover:flex items-center gap-0.5 bg-base-200 border border-base-300 rounded-lg shadow-md p-1 z-10`}>
                         <div className="dropdown dropdown-top dropdown-end">
-                          <div tabIndex={0} role="button" className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-yellow-500 transition-colors" title="React">
+                          <div tabIndex={0} role="button" className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-warning transition-colors" title="React">
                             <SmilePlus size={14} />
                           </div>
                           <ul tabIndex={0} className="dropdown-content z-[1] p-1 shadow bg-base-100 rounded-box w-max flex gap-1 mb-1 border border-base-300">
@@ -183,36 +183,38 @@ const ChatContainer = () => {
                           </ul>
                         </div>
                         {canPin && (
-                          <button onClick={() => pinMessage(message._id)} className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-primary transition-colors" title={message.isPinned ? "Unpin" : "Pin"}>
-                            <Pin size={14} className={message.isPinned ? "fill-primary text-primary" : ""} />
+                          <button onClick={() => pinMessage(message._id)} className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-primary transition-colors" title={message.isPinned ? "Unpin" : "Pin"}>
+                            <Pin size={14} className={message.isPinned ? "text-primary" : ""} />
                           </button>
                         )}
-                        <button onClick={() => setReplyingToMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-blue-500 transition-colors" title="Reply">
+                        <button onClick={() => setReplyingToMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-info transition-colors" title="Reply">
                           <Reply size={14} />
                         </button>
-                        <button onClick={() => setForwardingMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-green-500 transition-colors" title="Forward">
+                        <button onClick={() => setForwardingMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-success transition-colors" title="Forward">
                           <Forward size={14} />
                         </button>
-                        <button onClick={() => toggleStarMessage(message._id)} className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-yellow-500 transition-colors" title="Star message">
-                          <Star size={14} className={authUser && message.starredBy?.includes(authUser._id) ? 'fill-yellow-500 text-yellow-500' : ''} />
+                        <button onClick={() => toggleStarMessage(message._id)} className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-warning transition-colors" title="Star message">
+                          <Star size={14} className={message.isStarred ? "text-warning fill-warning" : ""} />
                         </button>
                         <div className="dropdown dropdown-top dropdown-end">
-                          <div tabIndex={0} role="button" className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-red-500 transition-colors" title="Delete">
-                            <Trash2 size={14} />
-                          </div>
-                          <ul tabIndex={0} className="dropdown-content z-[1] menu p-1.5 shadow-xl bg-base-100 rounded-box w-max mb-1 border border-base-300">
+                          {isMe && (
+                            <div tabIndex={0} role="button" className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-error transition-colors" title="Delete">
+                              <Trash2 size={14} />
+                            </div>
+                          )}
+                          <ul tabIndex={0} className="dropdown-content z-[1] p-1 shadow bg-base-100 rounded-box w-max border border-base-300">
                             <li>
-                              <button onClick={() => deleteMessageForMe(message._id)} className="text-xs text-red-500 hover:bg-red-500/10">Delete for me</button>
+                              <button onClick={() => deleteMessageForMe(message._id)} className="text-sm hover:bg-base-200 rounded-lg p-2 text-error">Delete for me</button>
                             </li>
                             {isMe && (
                               <li>
-                                <button onClick={() => deleteMessageForEveryone(message._id)} className="text-xs text-red-500 hover:bg-red-500/10">Delete for everyone</button>
+                                <button onClick={() => deleteMessageForEveryone(message._id)} className="text-sm hover:bg-base-200 rounded-lg p-2 text-error font-semibold">Delete for everyone</button>
                               </li>
                             )}
                           </ul>
                         </div>
-                        {isMe && (!message.poll || !message.poll.question) && !message.image && (
-                          <button onClick={() => setEditingMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-zinc-400 hover:text-accent transition-colors" title="Edit">
+                        {isMe && message.text && !message.audio && !message.image && !message.video && !message.poll && (
+                          <button onClick={() => setEditingMessage(message)} className="p-1.5 hover:bg-base-300 rounded-md text-base-content/60 hover:text-accent transition-colors" title="Edit">
                             <Edit2 size={14} />
                           </button>
                         )}
@@ -332,13 +334,13 @@ const ChatContainer = () => {
                                   <div className="absolute inset-y-0 left-0 bg-primary/20 transition-all duration-500" style={{ width: `${percent}%` }}></div>
                                   <div className="relative flex justify-between items-center text-sm z-10">
                                     <span className={`font-medium ${hasVoted ? 'text-primary' : ''}`}>{opt.text}</span>
-                                    <span className="text-xs font-semibold text-zinc-500 bg-base-100 px-1.5 py-0.5 rounded-md">{percent}%</span>
+                                    <span className="text-xs font-semibold text-base-content/60 bg-base-100 px-1.5 py-0.5 rounded-md">{percent}%</span>
                                   </div>
                                 </button>
                               );
                             })}
                           </div>
-                          <div className="text-xs text-zinc-500 mt-3 text-right">
+                          <div className="text-xs text-base-content/60 mt-3 text-right">
                             {message.poll.options.reduce((sum: number, o: any) => sum + o.votes.length, 0)} votes
                           </div>
                         </div>
@@ -369,7 +371,7 @@ const ChatContainer = () => {
 
                     <span className="flex items-center gap-1 text-xs opacity-60 mt-0.5">
                       {message.isScheduled && <span title="Scheduled Message"><Clock size={10} className="text-primary" /></span>}
-                      {message.isSilent && <span title="Sent Silently"><BellOff size={10} className="text-zinc-400" /></span>}
+                      {message.isSilent && <span title="Sent Silently"><BellOff size={10} className="text-base-content/50" /></span>}
                       {formatMessageTime(message.createdAt)}
                       {message.isEdited && <span className="italic">(edited)</span>}
                     </span>

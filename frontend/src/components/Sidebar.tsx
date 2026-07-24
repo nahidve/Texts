@@ -108,15 +108,15 @@ const Sidebar = () => {
   if (isUsersLoading || isGroupsLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className="h-full w-20 lg:w-80 flex flex-col transition-all duration-200 relative bg-white/40 shadow-xl overflow-hidden backdrop-blur-xl border-r border-white/60">
+    <aside className="h-full w-20 lg:w-80 flex flex-col transition-all duration-200 relative glass-panel border-r border-base-300 overflow-hidden">
       {/* Playful accent bar */}
-      <div className="absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b from-fuchsia-400 via-cyan-400 to-yellow-400 z-20" />
+      <div className="absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b from-primary via-secondary to-accent z-20" />
 
-      <div className="relative z-10 border-b border-white/60 w-full p-4 flex flex-col gap-2">
-        <div className="flex overflow-x-auto hide-scrollbar gap-1 bg-white/50 rounded-xl p-1 shadow-sm border border-white/60">
+      <div className="relative z-10 border-b border-base-300 w-full p-4 flex flex-col gap-2 bg-base-100/50">
+        <div className="flex overflow-x-auto hide-scrollbar gap-1 bg-base-200/50 rounded-xl p-1 shadow-sm border border-base-300">
           <button
             onClick={() => setActiveTab("users")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'users' ? 'bg-white text-cyan-600 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'users' ? 'bg-base-100 text-primary shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
             title="Contacts"
           >
             <Users className="size-4" />
@@ -124,7 +124,7 @@ const Sidebar = () => {
           </button>
           <button
             onClick={() => setActiveTab("groups")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'groups' ? 'bg-white text-fuchsia-600 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'groups' ? 'bg-base-100 text-secondary shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
             title="Groups"
           >
             <UsersIcon className="size-4" />
@@ -132,7 +132,7 @@ const Sidebar = () => {
           </button>
           <button
             onClick={() => setActiveTab("archived")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'archived' ? 'bg-white text-yellow-500 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'archived' ? 'bg-base-100 text-warning shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
             title="Archived"
           >
             <Archive className="size-4" />
@@ -140,7 +140,7 @@ const Sidebar = () => {
           </button>
           <button
             onClick={() => setActiveTab("starred")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'starred' ? 'bg-white text-orange-500 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'starred' ? 'bg-base-100 text-warning shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
             title="Starred"
           >
             <Star className="size-4" />
@@ -148,7 +148,7 @@ const Sidebar = () => {
           </button>
           <button
             onClick={() => setActiveTab("calls")}
-            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'calls' ? 'bg-white text-emerald-500 shadow-md font-bold' : 'text-slate-500 hover:text-slate-800 hover:bg-white/40 font-medium'}`}
+            className={`flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-premium ${activeTab === 'calls' ? 'bg-base-100 text-success shadow-md font-bold' : 'text-base-content/60 hover:text-base-content hover:bg-base-200 font-medium'}`}
             title="Calls"
           >
             <PhoneCall className="size-5" />
@@ -158,13 +158,13 @@ const Sidebar = () => {
 
         {activeTab !== "calls" && (
           <div className="relative mt-2 hidden lg:block">
-            <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
+            <Search className="absolute left-3 top-2.5 size-4 text-base-content/50" />
             <input
               type="text"
               placeholder={activeTab === "users" ? "Search contacts..." : "Search groups..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 bg-white/60 border border-white/80 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20 rounded-xl text-slate-800 placeholder-slate-400 outline-none transition-all shadow-sm"
+              className="input input-sm w-full pl-10 bg-base-200/50 border border-base-300 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-base-content placeholder-base-content/50 transition-premium shadow-sm"
             />
           </div>
         )}
@@ -172,16 +172,16 @@ const Sidebar = () => {
         {activeTab === 'users' ? (
           <div className="mt-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <label className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/50 hover:bg-white/80 transition-all border border-white/60 shadow-sm">
+              <label className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-xl bg-base-200/50 hover:bg-base-200 transition-premium border border-base-300 shadow-sm">
                 <input
                   type="checkbox"
                   checked={showOnlineOnly}
                   onChange={(e) => setShowOnlineOnly(e.target.checked)}
-                  className="w-4 h-4 text-cyan-500 bg-white border-slate-300 rounded focus:ring-cyan-500"
+                  className="checkbox checkbox-primary checkbox-xs rounded"
                 />
-                <span className="text-xs text-slate-700 font-bold tracking-wide">Online only</span>
+                <span className="text-xs text-base-content font-bold tracking-wide">Online only</span>
               </label>
-              <span className="text-xs text-cyan-600 font-bold bg-cyan-100 px-2 py-0.5 rounded-full">{Math.max(0, onlineUsers.length - 1)}</span>
+              <span className="text-xs text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">{Math.max(0, onlineUsers.length - 1)}</span>
             </div>
 
             <button
@@ -231,7 +231,7 @@ const Sidebar = () => {
                           <img src={user.profilePic || "/avatar.png"} alt={user.fullName} className="size-10 object-cover rounded-full border-2 border-base-300" />
                         </div>
                         <div className="text-left min-w-0 flex-1">
-                          <div className="font-semibold truncate text-white/90 text-sm">{user.fullName}</div>
+                          <div className="font-semibold truncate text-base-content/90 text-sm">{user.fullName}</div>
                         </div>
                       </button>
                     ))}
@@ -252,7 +252,7 @@ const Sidebar = () => {
                           <img src={group.avatar || "/avatar.png"} alt={group.name} className="size-10 object-cover rounded-full border-2 border-base-300" />
                         </div>
                         <div className="text-left min-w-0 flex-1">
-                          <div className="font-semibold truncate text-white/90 text-sm">{group.name}</div>
+                          <div className="font-semibold truncate text-base-content/90 text-sm">{group.name}</div>
                         </div>
                       </button>
                     ))}
@@ -281,7 +281,7 @@ const Sidebar = () => {
                 )}
 
                 {globalSearchResults.users.length === 0 && globalSearchResults.groups.length === 0 && globalSearchResults.messages.length === 0 && (
-                  <div className="text-center text-zinc-400 py-6 text-sm">No results found</div>
+                  <div className="text-center text-base-content/50 py-6 text-sm">No results found</div>
                 )}
               </>
             )}
@@ -298,12 +298,12 @@ const Sidebar = () => {
                 <div
                   key={user._id}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-premium
                     group relative cursor-pointer border
                     ${isMenuOpen ? 'z-50' : 'z-0'}
                     ${selectedUser?._id === user._id
-                      ? "bg-white border-cyan-200 shadow-md scale-[1.02]"
-                      : "bg-transparent border-transparent hover:bg-white/60 hover:border-white hover:shadow-sm"}
+                      ? "bg-base-200 border-primary shadow-md scale-[1.02]"
+                      : "bg-transparent border-transparent hover:bg-base-200/50 hover:border-base-300 hover:shadow-sm"}
                   `}
                   onClick={() => setSelectedUser(user)}
                 >
@@ -311,25 +311,25 @@ const Sidebar = () => {
                     <img
                       src={user.profilePic || "/avatar.png"}
                       alt={user.fullName}
-                      className={`size-12 object-cover rounded-full border-2 ${selectedUser?._id === user._id ? "border-cyan-400" : "border-white shadow-sm"}`}
+                      className={`size-12 object-cover rounded-full border-2 ${selectedUser?._id === user._id ? "border-primary" : "border-base-300 shadow-sm"}`}
                     />
                     {onlineUsers.includes(user._id) && (
-                      <span className="absolute bottom-0 right-0 size-3.5 bg-green-400 border-2 border-white rounded-full" />
+                      <span className="absolute bottom-0 right-0 size-3.5 bg-success border-2 border-base-100 rounded-full" />
                     )}
                   </div>
                   <div className="hidden lg:block text-left min-w-0 flex-1">
-                    <div className="font-semibold truncate text-white/90 text-base drop-shadow flex items-center gap-2">
+                    <div className="font-semibold truncate text-base-content/90 text-base drop-shadow flex items-center gap-2">
                       {user.fullName}
                       {isPinned && <Pin className="size-3 text-base-content/50" />}
                       {authUser?.mutedChats?.some((c: any) => c.chatId === user._id && c.chatModel === 'User' && new Date(c.mutedUntil) > new Date()) && (
                         <BellOff className="size-3 text-white/50" />
                       )}
                     </div>
-                    <div className="text-xs text-zinc-300">
+                    <div className="text-xs text-base-content/50">
                       {onlineUsers.includes(user._id) ? (
-                        <span className="text-green-400 font-bold animate-pulse">● Online</span>
+                        <span className="text-success font-bold animate-pulse">● Online</span>
                       ) : (
-                        <span className="text-zinc-500">Offline</span>
+                        <span className="text-base-content/40">Offline</span>
                       )}
                     </div>
                   </div>
@@ -381,7 +381,7 @@ const Sidebar = () => {
               );
             })}
             {sortedUsers.length === 0 && (
-              <div className="text-center text-zinc-400 py-6 text-lg font-semibold animate-fade-in-up">No users</div>
+              <div className="text-center text-base-content/50 py-6 text-lg font-semibold animate-fade-in-up">No users</div>
             )}
           </>
         ) : activeTab === "groups" ? (
@@ -394,12 +394,12 @@ const Sidebar = () => {
                 <div
                   key={group._id}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-premium
                     group relative cursor-pointer border
                     ${isMenuOpen ? 'z-50' : 'z-0'}
                     ${selectedGroup?._id === group._id
-                      ? "bg-white border-fuchsia-200 shadow-md scale-[1.02]"
-                      : "bg-transparent border-transparent hover:bg-white/60 hover:border-white hover:shadow-sm"}
+                      ? "bg-base-200 border-secondary shadow-md scale-[1.02]"
+                      : "bg-transparent border-transparent hover:bg-base-200/50 hover:border-base-300 hover:shadow-sm"}
                   `}
                   onClick={() => setSelectedGroup(group)}
                 >
@@ -407,18 +407,18 @@ const Sidebar = () => {
                     <img
                       src={group.avatar || "/avatar.png"}
                       alt={group.name}
-                      className={`size-12 object-cover rounded-full border-2 ${selectedGroup?._id === group._id ? "border-fuchsia-400" : "border-white shadow-sm"}`}
+                      className={`size-12 object-cover rounded-full border-2 ${selectedGroup?._id === group._id ? "border-secondary" : "border-base-300 shadow-sm"}`}
                     />
                   </div>
                   <div className="hidden lg:block text-left min-w-0 flex-1">
-                    <div className="font-semibold truncate text-white/90 text-base drop-shadow flex items-center gap-2">
+                    <div className="font-semibold truncate text-base-content/90 text-base drop-shadow flex items-center gap-2">
                       {group.name}
                       {isPinned && <Pin className="size-3 text-base-content/50" />}
                       {authUser?.mutedChats?.some((c: any) => c.chatId === group._id && c.chatModel === 'Group' && new Date(c.mutedUntil) > new Date()) && (
                         <BellOff className="size-3 text-white/50" />
                       )}
                     </div>
-                    <div className="text-xs text-zinc-300 truncate">
+                    <div className="text-xs text-base-content/50 truncate">
                       {group.members.length} members
                     </div>
                   </div>
@@ -470,27 +470,27 @@ const Sidebar = () => {
               );
             })}
             {sortedGroups.length === 0 && (
-              <div className="text-center text-zinc-400 py-6 text-lg font-semibold animate-fade-in-up">No groups</div>
+              <div className="text-center text-base-content/50 py-6 text-lg font-semibold animate-fade-in-up">No groups</div>
             )}
           </>
         ) : activeTab === "archived" ? (
           <div className="flex flex-col gap-2">
-            <div className="text-center text-zinc-400 py-2 text-sm font-semibold uppercase tracking-wider">Archived Chats</div>
+            <div className="text-center text-base-content/50 py-2 text-sm font-semibold uppercase tracking-wider">Archived Chats</div>
             {sortedUsers.map(user => (
-              <div key={user._id} className="flex items-center gap-3 px-3 py-2 rounded-2xl hover:bg-base-200/60 transition-all duration-200 cursor-pointer group" onClick={() => setSelectedUser(user)}>
-                <img src={user.profilePic || "/avatar.png"} className="size-10 object-cover rounded-full flex-shrink-0" />
+              <div key={user._id} className="flex items-center gap-3 px-3 py-2 rounded-2xl hover:bg-base-200/60 transition-premium cursor-pointer group" onClick={() => setSelectedUser(user)}>
+                <img src={user.profilePic || "/avatar.png"} className="size-10 object-cover rounded-full flex-shrink-0 border border-base-300" />
                 <span className="font-semibold text-sm flex-1 truncate">{user.fullName}</span>
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleArchive(user._id, false); }}
-                  className="opacity-0 group-hover:opacity-100 text-xs px-2 py-1 rounded-lg bg-base-200 hover:bg-base-300 transition-all flex items-center gap-1 flex-shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-xs px-2 py-1 rounded-lg bg-base-200 hover:bg-base-300 transition-premium flex items-center gap-1 flex-shrink-0"
                 >
                   <Archive className="size-3" /> Unarchive
                 </button>
               </div>
             ))}
-            {sortedUsers.length === 0 && <div className="text-center text-zinc-500 text-xs">No archived users</div>}
+            {sortedUsers.length === 0 && <div className="text-center text-base-content/40 text-xs">No archived users</div>}
 
-            <div className="text-center text-zinc-400 py-2 text-sm font-semibold uppercase tracking-wider mt-4">Archived Groups</div>
+            <div className="text-center text-base-content/50 py-2 text-sm font-semibold uppercase tracking-wider mt-4">Archived Groups</div>
             {sortedGroups.map(group => (
               <div key={group._id} className="flex items-center gap-3 px-3 py-2 rounded-2xl hover:bg-base-200/60 transition-all duration-200 cursor-pointer group" onClick={() => setSelectedGroup(group)}>
                 <img src={group.avatar || "/avatar.png"} className="size-10 object-cover rounded-full flex-shrink-0" />
@@ -503,11 +503,11 @@ const Sidebar = () => {
                 </button>
               </div>
             ))}
-            {sortedGroups.length === 0 && <div className="text-center text-zinc-500 text-xs">No archived groups</div>}
+            {sortedGroups.length === 0 && <div className="text-center text-base-content/40 text-xs">No archived groups</div>}
           </div>
         ) : activeTab === "starred" ? (
           <div className="flex flex-col gap-2">
-            <div className="text-center text-zinc-400 py-2 text-sm font-semibold uppercase tracking-wider">Starred Messages</div>
+            <div className="text-center text-base-content/50 py-2 text-sm font-semibold uppercase tracking-wider">Starred Messages</div>
             {starredMessages?.map(msg => (
               <button key={msg._id} onClick={() => handleMessageClick(msg)} className="w-full text-left p-3 rounded-2xl hover:bg-base-200/60 transition-all duration-200 shadow-sm border border-base-300">
                 <div className="flex items-center gap-2 mb-1">
@@ -519,7 +519,7 @@ const Sidebar = () => {
               </button>
             ))}
             {(!starredMessages || starredMessages.length === 0) && (
-              <div className="text-center text-zinc-500 text-sm mt-4">No starred messages</div>
+              <div className="text-center text-base-content/40 text-sm mt-4">No starred messages</div>
             )}
           </div>
         ) : null}

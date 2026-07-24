@@ -2,3 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 @plugin "daisyui";
+
+@layer base {
+  ::selection {
+    @apply bg-primary text-primary-content;
+  }
+
+  /* Custom Scrollbar for a premium look */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-base-300 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary opacity-80;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply antialiased text-base-content bg-base-100;
+  }
+}
+
+@layer components {
+  /* Premium Glassmorphism Panel */
+  .glass-panel {
+    @apply bg-base-100 bg-opacity-70 backdrop-blur-md border border-base-content border-opacity-10 shadow-lg;
+  }
+  
+  /* Smooth hover transition for buttons and interactive elements */
+  .transition-premium {
+    @apply transition-all duration-300 ease-in-out;
+  }
+}

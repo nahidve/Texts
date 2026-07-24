@@ -42,7 +42,7 @@ const CallHistory = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex justify-center items-center h-full text-zinc-400">
+      <div className="flex-1 flex justify-center items-center h-full text-base-content/50">
         <span className="loading loading-spinner loading-md"></span>
       </div>
     );
@@ -50,7 +50,7 @@ const CallHistory = () => {
 
   if (calls.length === 0) {
     return (
-      <div className="flex-1 flex flex-col justify-center items-center h-full text-zinc-400 gap-2">
+      <div className="flex-1 flex flex-col justify-center items-center h-full text-base-content/50 gap-2">
         <Phone className="size-12 opacity-20" />
         <p>No recent calls</p>
       </div>
@@ -110,7 +110,7 @@ const CallHistory = () => {
                     {otherUser.fullName}
                   </span>
                   
-                  <div className="flex items-center gap-1 text-sm text-zinc-400">
+                  <div className="flex items-center gap-1 text-sm text-base-content/60">
                     {isOutgoing ? (
                       <PhoneOutgoing className="size-3" />
                     ) : isMissed ? (
@@ -126,7 +126,7 @@ const CallHistory = () => {
               </div>
 
               <div className="flex items-center gap-4">
-                 <span className="text-sm font-medium text-zinc-500 hidden sm:block">
+                 <span className="text-sm font-medium text-base-content/60 hidden sm:block">
                     {formatDuration(call.duration)}
                  </span>
                  <button onClick={() => deleteCall(call._id)} className="btn btn-ghost btn-circle btn-sm opacity-0 group-hover:opacity-100 transition-opacity">

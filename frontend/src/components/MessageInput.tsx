@@ -426,7 +426,7 @@ const MessageInput = () => {
             <img
               src={imagePreview}
               alt="Preview"
-              className="w-24 h-24 rounded-xl object-cover border border-zinc-500 shadow-lg"
+              className="w-24 h-24 rounded-xl object-cover border border-base-300 shadow-lg"
             />
             <button
               type="button"
@@ -465,7 +465,7 @@ const MessageInput = () => {
       {showMentions && (
         <div className="absolute bottom-full left-4 mb-2 w-64 bg-base-100 border border-base-300 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto z-50">
           <div className="p-2 border-b border-base-300">
-            <span className="text-xs font-semibold text-zinc-500">Mentions</span>
+            <span className="text-xs font-semibold text-base-content/60">Mentions</span>
           </div>
           <div
             className="px-4 py-2 hover:bg-base-200 cursor-pointer flex items-center gap-3"
@@ -600,7 +600,7 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${imagePreview ? "text-emerald-500" : "text-zinc-400"
+            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${imagePreview ? "text-success" : "text-base-content/60"
               }`}
           >
             <Image size={22} />
@@ -620,7 +620,7 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => fileInputRef2.current?.click()}
-            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${filePreview ? "text-primary" : "text-zinc-400"
+            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${filePreview ? "text-primary" : "text-base-content/60"
               }`}
             title="Attach file"
           >
@@ -633,7 +633,7 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => setShowPollModal(true)}
-            className="transition-all duration-200 p-2 rounded-full text-zinc-400 hover:scale-110"
+            className="transition-all duration-200 p-2 rounded-full text-base-content/60 hover:scale-110"
             title="Create Poll"
           >
             <BarChart2 size={22} />
@@ -645,7 +645,7 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => setShowMediaPicker(!showMediaPicker)}
-            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${showMediaPicker ? "text-primary" : "text-zinc-400"}`}
+            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${showMediaPicker ? "text-primary" : "text-base-content/60"}`}
             title="GIFs & Stickers"
           >
             <Sticker size={22} />
@@ -669,7 +669,7 @@ const MessageInput = () => {
                 <button
                   type="button"
                   onClick={() => setIsSilent(!isSilent)}
-                  className={`p-2 rounded-full transition-colors ${isSilent ? 'text-primary' : 'text-zinc-400 hover:text-base-content'}`}
+                  className={`p-2 rounded-full transition-colors ${isSilent ? 'text-primary' : 'text-base-content/60 hover:text-base-content'}`}
                   title={isSilent ? "Will send silently" : "Send silently"}
                 >
                   <BellOff size={16} />
@@ -677,7 +677,7 @@ const MessageInput = () => {
                 <div className="relative group">
                   <button
                     type="button"
-                    className={`p-2 rounded-full transition-colors ${scheduledFor ? 'text-primary' : 'text-zinc-400 hover:text-base-content'}`}
+                    className={`p-2 rounded-full transition-colors ${scheduledFor ? 'text-primary' : 'text-base-content/60 hover:text-base-content'}`}
                     title="Schedule message"
                   >
                     <Clock size={16} />

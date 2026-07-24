@@ -15,6 +15,7 @@ export const CallUI = () => {
     isMicMuted,
     isVideoMuted,
     inviteData,
+    invitedUsers,
     acceptCall,
     rejectCall,
     cancelCall,
@@ -246,27 +247,33 @@ export const CallUI = () => {
               {users.filter(u => onlineUsers.includes(u._id) && u._id !== authUser?._id && u._id !== remoteUser?._id && !Object.keys(remoteStreams).includes(u._id)).length === 0 ? (
                 <div className="text-center text-base-content/50 py-8">No online users available to invite</div>
               ) : (
-                users.filter(u => onlineUsers.includes(u._id) && u._id !== authUser?._id && u._id !== remoteUser?._id && !Object.keys(remoteStreams).includes(u._id)).map(user => (
-                  <div key={user._id} className="flex items-center justify-between p-3 rounded-lg hover:bg-base-200 transition-colors border border-transparent hover:border-base-300">
-                    <div className="flex items-center gap-3">
-                      <div className="avatar">
-                        <div className="w-10 rounded-full">
-                          <img src={user.profilePic || "/avatar.png"} alt={user.fullName} />
+                users.filter(u => onlineUsers.includes(u._id) && u._id !== authUser?._id && u._id !== remoteUser?._id && !Object.keys(remoteStreams).includes(u._id)).map(user => {
+                  const isInvited = invitedUsers.includes(user._id);
+                  return (
+                    <div key={user._id} className="flex items-center justify-between p-3 rounded-lg hover:bg-base-200 transition-colors border border-transparent hover:border-base-300">
+                      <div className="flex items-center gap-3">
+                        <div className="avatar">
+                          <div className="w-10 rounded-full">
+                            <img src={user.profilePic || "/avatar.png"} alt={user.fullName} />
+                          </div>
                         </div>
+                        <span className="font-medium">{user.fullName}</span>
                       </div>
-                      <span className="font-medium">{user.fullName}</span>
+                      <button 
+                        onClick={() => {
+                          if (!isInvited) {
+                            inviteParticipant(user._id);
+                            setShowAddParticipantModal(false);
+                          }
+                        }} 
+                        disabled={isInvited}
+                        className={`btn btn-sm ${isInvited ? 'btn-disabled' : 'btn-primary'}`}
+                      >
+                        {isInvited ? "Pending..." : "Invite"}
+                      </button>
                     </div>
-                    <button 
-                      onClick={() => {
-                        inviteParticipant(user._id);
-                        setShowAddParticipantModal(false);
-                      }} 
-                      className="btn btn-sm btn-primary"
-                    >
-                      Invite
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
