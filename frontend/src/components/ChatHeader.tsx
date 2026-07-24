@@ -16,7 +16,6 @@ const ChatHeader = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showMuteOptions, setShowMuteOptions] = useState(false);
   const [isUploadingWallpaper, setIsUploadingWallpaper] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { initiateCall } = useCallStore();
   const isOnline = selectedUser && onlineUsers.includes(selectedUser._id);
@@ -42,7 +41,7 @@ const ChatHeader = () => {
       setIsUploadingWallpaper(false);
     };
     reader.readAsDataURL(file);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    e.target.value = "";
     setIsDropdownOpen(false);
   };
 
@@ -156,13 +155,6 @@ const ChatHeader = () => {
             >
               <MoreVertical className="size-5 text-discord-ink/70 group-hover:text-white" />
             </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleWallpaperUpload}
-              accept="image/*"
-              className="hidden"
-            />
             {isDropdownOpen && (
               <div
                 className="absolute right-0 top-full mt-2 w-48 bg-[#111214] shadow-2xl rounded-md border border-discord-surface py-2 z-50 animate-in fade-in zoom-in-95"
@@ -220,22 +212,12 @@ const ChatHeader = () => {
                   className="w-full text-left px-4 py-2 hover:bg-base-200 text-sm flex items-center gap-2 cursor-pointer"
                 >
                   <Image className="size-4" />
-                  Set Wallpaper
+                  {isUploadingWallpaper ? "Uploading..." : "Set Wallpaper"}
                   <input
                     type="file"
                     className="hidden"
                     accept="image/*"
-                    onChange={(e) => {
-                      if (!e.target.files || e.target.files.length === 0) return;
-                      const file = e.target.files[0];
-                      const reader = new FileReader();
-                      reader.readAsDataURL(file);
-                      reader.onload = () => {
-                        setWallpaper(targetId!, isGroup, reader.result as string);
-                        setIsDropdownOpen(false);
-                      };
-                      e.target.value = ''; // Reset input so same file can be selected again
-                    }}
+                    onChange={handleWallpaperUpload}
                   />
                 </label>
                 <button
