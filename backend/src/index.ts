@@ -11,6 +11,7 @@ import messageRoutes from "./routes/message.route.js";
 import callRoutes from "./routes/call.route.js";
 import groupRoutes from "./routes/group.route.js";
 import searchRoutes from "./routes/search.route.js";
+import storyRoutes from "./routes/story.route.js";
 import { app, server } from "./lib/socket.js";
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/calls", callRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/stories", storyRoutes);
 
 
 
