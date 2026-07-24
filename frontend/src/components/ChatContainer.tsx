@@ -7,7 +7,7 @@ import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 // import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Phone, Video } from "lucide-react";
-import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Mic, Star, Clock, BellOff, Phone, Video } from "lucide-react";
+import { Pin, Edit2, SmilePlus, Reply, Forward, Trash2, Mic, Star, Clock, BellOff, Phone, Video, Download, File as FileIcon } from "lucide-react";
 import ForwardModal from "./ForwardModal";
 import VoiceMessage from "./VoiceMessage";
 
@@ -259,6 +259,29 @@ const ChatContainer = () => {
                             duration={message.audioDuration}
                             isMe={isMe}
                           />
+                        </div>
+                      )}
+                      {message.fileUrl && (
+                        <div className="mb-2">
+                          <div className={`flex items-center gap-3 p-3 rounded-xl border min-w-[200px] max-w-xs ${isMe ? 'bg-primary/20 border-primary/30 text-primary-content' : 'bg-base-200 border-base-300'}`}>
+                            <div className={`p-2 rounded-lg ${isMe ? 'bg-primary/30 text-primary-content' : 'bg-primary/10 text-primary'}`}>
+                              <FileIcon size={20} />
+                            </div>
+                            <div className="flex flex-col flex-1 overflow-hidden">
+                              <span className="text-sm font-semibold truncate" title={message.fileName || "File"}>{message.fileName || "File"}</span>
+                              <span className="text-[10px] uppercase font-bold opacity-70">Document</span>
+                            </div>
+                            <a
+                              href={message.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download={message.fileName}
+                              className={`p-2 rounded-full transition-colors ${isMe ? 'hover:bg-primary/40 text-primary-content' : 'hover:bg-base-300 text-base-content/70 hover:text-primary'}`}
+                              title="Download File"
+                            >
+                              <Download size={18} />
+                            </a>
+                          </div>
                         </div>
                       )}
                       {message.text && (

@@ -50,12 +50,12 @@ export const getMessages = async (req: Request, res: Response) => {
 //send a message to a user
 export const sendMessage = async (req: Request, res: Response) => {
     try {
-        const { text, image, audio, audioDuration, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
+        const { text, image, audio, audioDuration, file, fileName, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
         const { id: receiverId } = req.params;
         const senderId = (req.user!._id as any);
 
-        if (!text && !image && !audio) {
-            return res.status(400).json({ message: "Text, image, or audio is required" });
+        if (!text && !image && !audio && !file) {
+            return res.status(400).json({ message: "Text, image, audio, or file is required" });
         }
 
         let imageUrl;
@@ -70,6 +70,12 @@ export const sendMessage = async (req: Request, res: Response) => {
             audioUrl = uploadResponse.secure_url;
         }
 
+        let fileUrl;
+        if (file) {
+            const uploadResponse = await cloudinary.uploader.upload(file, { resource_type: "auto" });
+            fileUrl = uploadResponse.secure_url;
+        }
+
         const newMessage = new Message({
             senderId,
             receiverId,
@@ -77,6 +83,8 @@ export const sendMessage = async (req: Request, res: Response) => {
             image: imageUrl,
             audio: audioUrl,
             audioDuration,
+            fileUrl,
+            fileName: file ? fileName : undefined,
             replyTo: replyTo || null,
             isForwarded: isForwarded || false,
             isSilent: isSilent || false,
@@ -137,12 +145,12 @@ export const getGroupMessages = async (req: Request, res: Response) => {
 
 export const sendGroupMessage = async (req: Request, res: Response) => {
     try {
-        const { text, image, audio, audioDuration, mentions, poll, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
+        const { text, image, audio, audioDuration, file, fileName, mentions, poll, replyTo, isForwarded, scheduledFor, isSilent } = req.body;
         const { id: groupId } = req.params;
         const senderId = (req.user!._id as any);
 
-        if (!text && !image && !poll && !audio) {
-            return res.status(400).json({ message: "Text, image, poll, or audio is required" });
+        if (!text && !image && !poll && !audio && !file) {
+            return res.status(400).json({ message: "Text, image, poll, audio, or file is required" });
         }
 
         let imageUrl;
@@ -161,6 +169,14 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
             audioUrl = audio;
         }
 
+        let fileUrl;
+        if (file && !file.startsWith("http")) {
+            const uploadResponse = await cloudinary.uploader.upload(file, { resource_type: "auto" });
+            fileUrl = uploadResponse.secure_url;
+        } else if (file) {
+            fileUrl = file;
+        }
+
         const newMessage = new Message({
             senderId,
             groupId,
@@ -168,6 +184,8 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
             image: imageUrl,
             audio: audioUrl,
             audioDuration,
+            fileUrl,
+            fileName: file ? fileName : undefined,
             mentions: mentions || [],
             poll,
             replyTo: replyTo || null,

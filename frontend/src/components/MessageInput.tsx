@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Image, Send, X, BarChart2, Check, XCircle, Smile, Mic, Trash2, Pause, Play, BellOff, Clock } from "lucide-react";
+import { Image, Send, X, BarChart2, Check, XCircle, Smile, Mic, Trash2, Pause, Play, BellOff, Clock, Paperclip } from "lucide-react";
 import toast from "react-hot-toast";
 import CreatePollModal from "./CreatePollModal";
 import EmojiPicker from 'emoji-picker-react';
@@ -9,7 +9,11 @@ import EmojiPicker from 'emoji-picker-react';
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string>("");
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef2 = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { sendMessage, selectedGroup, selectedUser, editingMessage, editMessage, setEditingMessage, replyingToMessage, setReplyingToMessage } = useChatStore();
   const { socket } = useAuthStore();
@@ -44,6 +48,8 @@ const MessageInput = () => {
     } else {
       setText("");
       setImagePreview(null);
+      setFilePreview(null);
+      setFileName("");
     }
   }, [editingMessage]);
 
@@ -65,6 +71,58 @@ const MessageInput = () => {
   const removeImage = () => {
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const processFile = (file: File) => {
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("File size must be less than 20MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFilePreview(reader.result as string);
+      setFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    processFile(file);
+  };
+
+  const removeFile = () => {
+    setFilePreview(null);
+    setFileName("");
+    if (fileInputRef2.current) fileInputRef2.current.value = "";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        processFile(file);
+      }
+    }
   };
 
   const handleSendAudio = async () => {
@@ -217,7 +275,7 @@ const MessageInput = () => {
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!text.trim() && !imagePreview && !audioPreview) return;
+    if (!text.trim() && !imagePreview && !audioPreview && !filePreview) return;
 
     if (editingMessage) {
       await editMessage(editingMessage._id, text.trim());
@@ -243,6 +301,8 @@ const MessageInput = () => {
         image: imagePreview,
         audio: audioPreview,
         audioDuration: audioPreview ? recordingDuration : undefined,
+        file: filePreview,
+        fileName: fileName,
         replyTo: replyingToMessage?._id,
         isSilent,
         scheduledFor
@@ -250,11 +310,14 @@ const MessageInput = () => {
 
       setText("");
       setImagePreview(null);
+      setFilePreview(null);
+      setFileName("");
       setAudioPreview(null);
       setIsSilent(false);
       setScheduledFor("");
       setShowEmojiPicker(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (fileInputRef2.current) fileInputRef2.current.value = "";
 
       if (socket) {
         socket.emit("stopTyping", {
@@ -315,7 +378,22 @@ const MessageInput = () => {
     : [];
 
   return (
-    <div className="relative z-10 w-full px-4 pb-4 pt-2 backdrop-blur-md">
+    <div 
+      className={`relative z-10 w-full px-4 pb-4 pt-2 backdrop-blur-md transition-all ${isDragging ? 'bg-primary/10 ring-2 ring-primary ring-inset rounded-t-xl' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-base-100/80 backdrop-blur-sm rounded-t-xl pointer-events-none">
+          <div className="flex flex-col items-center gap-2 text-primary font-bold animate-bounce">
+            <div className="p-4 bg-primary/20 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            </div>
+            Drop files here to upload
+          </div>
+        </div>
+      )}
       {/* Preview */}
       {imagePreview && (
         <div className="mb-3 flex items-center gap-3">
@@ -329,6 +407,28 @@ const MessageInput = () => {
               type="button"
               onClick={removeImage}
               className="absolute -top-2 -right-2 p-1 rounded-full bg-base-300 hover:bg-base-200 transition-all shadow-md"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* File Preview */}
+      {filePreview && (
+        <div className="mb-3 flex items-center gap-3">
+          <div className="relative group transition-transform hover:scale-[1.02] bg-base-200 border border-base-300 rounded-xl p-3 flex items-center gap-3 shadow-sm pr-10">
+            <div className="p-2 bg-primary/20 text-primary rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div className="flex flex-col max-w-[150px] sm:max-w-[200px]">
+              <span className="text-sm font-semibold truncate">{fileName}</span>
+              <span className="text-xs text-base-content/60">Attached File</span>
+            </div>
+            <button
+              type="button"
+              onClick={removeFile}
+              className="absolute top-1/2 -translate-y-1/2 right-2 p-1.5 rounded-full hover:bg-base-300 transition-all text-base-content/70 hover:text-red-500"
             >
               <X className="w-4 h-4" />
             </button>
@@ -486,6 +586,27 @@ const MessageInput = () => {
           </button>
         )}
 
+        <input
+          type="file"
+          accept=".pdf,.zip,.docx,.ppt,.pptx,.apk,.exe,.mp3"
+          ref={fileInputRef2}
+          onChange={handleFileChange}
+          className="hidden"
+        />
+
+        {/* Attach File */}
+        {!editingMessage && (
+          <button
+            type="button"
+            onClick={() => fileInputRef2.current?.click()}
+            className={`transition-all duration-200 p-2 rounded-full hover:scale-110 ${filePreview ? "text-primary" : "text-zinc-400"
+              }`}
+            title="Attach file"
+          >
+            <Paperclip size={22} />
+          </button>
+        )}
+
         {/* Attach Poll */}
         {!editingMessage && selectedGroup && (
           <button
@@ -520,7 +641,7 @@ const MessageInput = () => {
           >
             <Send size={20} className="ml-1" />
           </button>
-        ) : (text.trim() || imagePreview) ? (
+        ) : (text.trim() || imagePreview || filePreview) ? (
           <div className="flex items-center gap-1 bg-base-200 rounded-full pr-1">
             {!editingMessage && (
               <>

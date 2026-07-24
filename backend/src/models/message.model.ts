@@ -8,6 +8,8 @@ export interface MessageType extends Document {
     image?: string;
     audio?: string;
     audioDuration?: number;
+    fileUrl?: string;
+    fileName?: string;
     mentions?: mongoose.Types.ObjectId[];
     isPinned?: boolean;
     isEdited?: boolean;
@@ -64,6 +66,12 @@ const messageSchema = new mongoose.Schema({
     },
     audioDuration: {
         type: Number,
+    },
+    fileUrl: {
+        type: String,
+    },
+    fileName: {
+        type: String,
     },
     mentions: [{
         type: mongoose.Schema.Types.ObjectId,
