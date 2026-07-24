@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Image, Send, X, BarChart2, Check, XCircle, Smile, Mic, Trash2, Pause, Play, BellOff, Clock, Paperclip, Sticker } from "lucide-react";
+import { Image, Send, X, BarChart2, Check, XCircle, Mic, Trash2, Pause, Play, BellOff, Clock, Paperclip, Sticker } from "lucide-react";
 import toast from "react-hot-toast";
 import CreatePollModal from "./CreatePollModal";
 import MediaPicker from "./MediaPicker";
